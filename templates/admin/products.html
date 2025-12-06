@@ -1,0 +1,311 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Products{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">Products Management</h1>
+                <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New Product
+                </a>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="search" class="form-control" placeholder="Search products..." 
+                                   value="{{ request.args.get('search', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="card">
+                <div class="card-body">
+                    {% if products %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>{{ product.id }}</td>
+                                    <td>
+                                        {% if product.image %}
+                                        <img src="{{ url_for('static', filename='uploads/' + product.image) }}" 
+                                             alt="{{ product.name }}" 
+                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                             class="rounded border">
+                                        {% else %}
+                                        <img src="{{ url_for('static', filename='images/default-product.jpg') }}" 
+                                             alt="{{ product.name }}" 
+                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                             class="rounded border">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ product.name }}</strong>
+                                        {% if product.description %}
+                                        <br>
+                                        <small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ product.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="price-info">
+                                            {% if product.discount_price %}
+                                            <strong class="text-danger">GH₵ {{ "%.2f"|format(product.price - product.discount_price) }}</strong>
+                                            <br>
+                                            <small class="text-muted text-decoration-line-through">GH₵ {{ "%.2f"|format(product.price) }}</small>
+                                            <br>
+                                            <span class="badge bg-success">Save {{ product.discount_percentage() }}%</span>
+                                            {% else %}
+                                            <strong>GH₵ {{ "%.2f"|format(product.price) }}</strong>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if product.stock_quantity > 10 %}
+                                        <span class="badge bg-success">{{ product.stock_quantity }} in stock</span>
+                                        {% elif product.stock_quantity > 0 %}
+                                        <span class="badge bg-warning">{{ product.stock_quantity }} low stock</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Out of stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product.is_active %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Active
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> Inactive
+                                        </span>
+                                        {% endif %}
+                                        <br>
+                                        {% if product.is_featured %}
+                                        <span class="badge bg-warning mt-1">
+                                            <i class="fas fa-star"></i> Featured
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group-vertical btn-group-sm">
+                                            <!-- View Button -->
+                                            {% if product.is_active %}
+                                            <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                               class="btn btn-outline-info mb-1" 
+                                               target="_blank"
+                                               title="View on website">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            {% else %}
+                                            <button class="btn btn-outline-secondary mb-1" disabled title="Product inactive">
+                                                <i class="fas fa-eye-slash"></i> View
+                                            </button>
+                                            {% endif %}
+                                            
+                                            <!-- Edit Button -->
+                                            <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" 
+                                               class="btn btn-outline-primary mb-1"
+                                               title="Edit product">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            
+                                            <!-- Delete Button -->
+                                            <form action="{{ url_for('admin_delete_product', product_id=product.id) }}" 
+                                                  method="POST" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Are you sure you want to delete {{ product.name }}? This action cannot be undone.');">
+                                                <button type="submit" class="btn btn-outline-danger w-100" title="Delete product">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Products Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ products|length }}</h4>
+                                    <p>Total Products</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ products|selectattr('is_active')|list|length }}</h4>
+                                    <p>Active Products</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ products|selectattr('is_featured')|list|length }}</h4>
+                                    <p>Featured Products</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h4>{{ products|selectattr('stock_quantity', 'le', 5)|list|length }}</h4>
+                                    <p>Low Stock</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- No Products Found -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                        <h3>No Products Found</h3>
+                        <p class="text-muted mb-4">
+                            {% if request.args.get('search') or request.args.get('category') %}
+                            Try adjusting your search criteria or 
+                            <a href="{{ url_for('admin_products') }}">clear filters</a>.
+                            {% else %}
+                            Get started by adding your first product.
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus"></i> Add Your First Product
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary w-100 mb-2">
+                                        <i class="fas fa-plus"></i> Add New Product
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-secondary w-100 mb-2">
+                                        <i class="fas fa-tags"></i> Manage Categories
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{{ url_for('products') }}" class="btn btn-outline-info w-100 mb-2" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i> View Storefront
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.price-info {
+    min-width: 120px;
+}
+
+.btn-group-vertical .btn {
+    text-align: left;
+    font-size: 0.8rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+</style>
+
+<script>
+// Add confirmation for delete actions
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForms = document.querySelectorAll('form[onsubmit]');
+    deleteForms.forEach(form => {
+        form.onsubmit = function() {
+            const productName = this.closest('tr').querySelector('td:nth-child(3) strong').textContent;
+            return confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`);
+        };
+    });
+});
+
+// Add image error handling
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        img.onerror = function() {
+            this.src = "{{ url_for('static', filename='images/default-product.jpg') }}";
+        };
+    });
+});
+</script>
+{% endblock %}

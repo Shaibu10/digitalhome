@@ -1,0 +1,131 @@
+/* Dynamic Messages Styling */
+
+.dynamic-messages-container {
+    background: transparent;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.dynamic-message {
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    animation: slideDown 0.6s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dynamic-message:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+}
+
+.dynamic-message-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+}
+
+.dynamic-message-content {
+    flex: 1;
+}
+
+.dynamic-message-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dynamic-message-body {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.dynamic-message-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.dynamic-message-cta:hover {
+    transform: translateX(4px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dynamic-message {
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .dynamic-message-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .dynamic-message-title {
+        font-size: 1.1rem;
+    }
+    
+    .dynamic-message-body {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dynamic-message {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .dynamic-message-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+    
+    .dynamic-message-title {
+        font-size: 1rem;
+    }
+    
+    .dynamic-message-body {
+        font-size: 0.9rem;
+    }
+    
+    .dynamic-message-cta {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}

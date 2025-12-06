@@ -1,0 +1,408 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - User Activity Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">User Activity Logs</h1>
+            <p class="text-muted mb-0">Monitor user activities and system access</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-danger" onclick="clearOldLogs()">
+                <i class="fas fa-trash me-2"></i>Clear Old Logs
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="exportLogs">
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>Activity Filters
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin_activity_logs') }}" id="filterForm">
+                <div class="row g-3">
+                    <!-- User Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">User</label>
+                        <select class="form-select" name="user_id">
+                            <option value="">All Users</option>
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}" {% if selected_user_id == user.id %}selected{% endif %}>
+                                {{ user.username }} ({{ user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Activity Type Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Activity Type</label>
+                        <select class="form-select" name="activity_type">
+                            <option value="">All Activities</option>
+                            {% for activity_type in activity_types %}
+                            <option value="{{ activity_type }}" {% if selected_activity_type == activity_type %}selected{% endif %}>
+                                {{ activity_type|replace('_', ' ')|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-md-3">
+                        <label class="form-label">Date From</label>
+                        <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Date To</label>
+                        <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Apply Filters
+                        </button>
+                        <a href="{{ url_for('admin_activity_logs') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Activities</div>
+                            <div class="h5 mb-0">{{ total_activities }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Today's Activities</div>
+                            <div class="h5 mb-0">{{ today_activities }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Unique Users</div>
+                            <div class="h5 mb-0">{{ unique_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Most Active</div>
+                            <div class="h5 mb-0">{{ most_active_user.username if most_active_user else 'N/A' }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="card-title mb-0">
+                        Activity Logs 
+                        <span class="text-muted">({{ activities|length }} results)</span>
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        <label class="form-check-label" for="autoRefresh">Auto Refresh</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if activities %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="activityTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>User</th>
+                            <th>Activity Type</th>
+                            <th>Description</th>
+                            <th>IP Address</th>
+                            <th>User Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr>
+                            <td>
+                                <small class="text-muted">{{ activity.created_at.strftime('%Y-%m-%d') }}</small>
+                                <br>
+                                <small class="text-muted">{{ activity.created_at.strftime('%H:%M:%S') }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                        <span class="text-white fw-bold" style="font-size: 0.8rem;">
+                                            {{ activity.user.username[0]|upper }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ activity.user.username }}</div>
+                                        <small class="text-muted">{{ activity.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 
+                                    'success' if activity.activity_type == 'login' 
+                                    else 'secondary' if activity.activity_type == 'logout'
+                                    else 'info' if activity.activity_type == 'view_product'
+                                    else 'warning' if activity.activity_type == 'add_to_cart'
+                                    else 'primary' if activity.activity_type == 'admin_action'
+                                    else 'dark'
+                                }}">
+                                    {{ activity.activity_type|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ activity.description }}</div>
+                                {% if activity.activity_type == 'login_failed' %}
+                                <small class="text-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Security Alert
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code class="text-muted">{{ activity.ip_address or 'N/A' }}</code>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {% if activity.user_agent %}
+                                    {{ activity.user_agent[:50] }}{% if activity.user_agent|length > 50 %}...{% endif %}
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if activities|length >= 100 %}
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Showing latest 100 activities</small>
+                        <a href="{{ url_for('admin_activity_logs', show_all=1) }}" class="btn btn-sm btn-outline-primary">
+                            Show All Activities
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-history fa-4x text-muted mb-3"></i>
+                <h4>No Activity Logs Found</h4>
+                <p class="text-muted">
+                    {% if selected_user_id or selected_activity_type or date_from or date_to %}
+                    No activities match your current filters. Try adjusting your criteria.
+                    {% else %}
+                    No user activities have been recorded yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh functionality
+    const autoRefresh = document.getElementById('autoRefresh');
+    let refreshInterval;
+    
+    function startAutoRefresh() {
+        refreshInterval = setInterval(() => {
+            window.location.reload();
+        }, 30000); // Refresh every 30 seconds
+    }
+    
+    function stopAutoRefresh() {
+        clearInterval(refreshInterval);
+    }
+    
+    if (autoRefresh.checked) {
+        startAutoRefresh();
+    }
+    
+    autoRefresh.addEventListener('change', function() {
+        if (this.checked) {
+            startAutoRefresh();
+        } else {
+            stopAutoRefresh();
+        }
+    });
+    
+    // Export functionality
+    document.getElementById('exportLogs').addEventListener('click', function() {
+        const rows = [];
+        const headers = ['Timestamp', 'Username', 'Email', 'Activity Type', 'Description', 'IP Address', 'User Agent'];
+        rows.push(headers.join(','));
+        
+        {% for activity in activities %}
+        rows.push([
+            '{{ activity.created_at.strftime("%Y-%m-%d %H:%M:%S") }}',
+            `"{{ activity.user.username }}"`,
+            `"{{ activity.user.email }}"`,
+            `"{{ activity.activity_type }}"`,
+            `"{{ activity.description }}"`,
+            `"{{ activity.ip_address or '' }}"`,
+            `"{{ (activity.user_agent or '')|replace('"', "'") }}"`
+        ].join(','));
+        {% endfor %}
+        
+        const csvContent = "data:text/csv;charset=utf-8," + rows.join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "activity_logs_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+});
+
+function clearOldLogs() {
+    if (confirm('Are you sure you want to clear activity logs older than 30 days? This action cannot be undone.')) {
+        const endpoint = '{{ url_for("admin_clear_old_logs") }}';
+        console.log('Clearing logs from endpoint:', endpoint);
+        
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include' // Include cookies for authentication
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                showSuccessAlert('Old logs cleared successfully. Reloading page...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showErrorAlert('Error clearing logs: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            showErrorAlert('Error clearing logs: ' + error);
+        });
+    }
+}
+
+function showSuccessAlert(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+}
+
+function showErrorAlert(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+}
+</script>
+{% endblock %}

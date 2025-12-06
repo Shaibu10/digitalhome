@@ -1,0 +1,194 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - User Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">User Details</h1>
+            <p class="text-muted mb-0">Detailed information about {{ user.username }}</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Users
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Username</label>
+                                <p class="fw-bold">{{ user.username }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Email</label>
+                                <p class="fw-bold">{{ user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">User ID</label>
+                                <p class="fw-bold">{{ user.id }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Phone Number</label>
+                                <p class="fw-bold">
+                                    {% if user.phone_number %}
+                                    {{ user.phone_number }}
+                                    <span class="badge bg-success ms-2">SMS Enabled</span>
+                                    {% else %}
+                                    <span class="text-muted">Not provided</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Joined Date</label>
+                                <p class="fw-bold">{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Account Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Admin Status</label>
+                                <div>
+                                    {% if user.is_admin %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-shield-alt me-1"></i>Administrator
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Regular User</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Account Status</label>
+                                <div>
+                                    {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Email Verification</label>
+                                <div>
+                                    {% if user.is_verified %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Unverified
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Last Login</label>
+                                <p class="fw-bold">
+                                    {% if user.last_login %}
+                                    {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    Never logged in
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if not user.is_verified %}
+                        <form action="{{ url_for('admin_verify_user', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('Manually verify {{ user.username }}?')">
+                                <i class="fas fa-check-circle me-2"></i>Verify User
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if not user.is_admin %}
+                        <form action="{{ url_for('admin_toggle_admin', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-warning w-100" 
+                                    onclick="return confirm('Make {{ user.username }} an admin?')">
+                                <i class="fas fa-user-shield me-2"></i>Make Admin
+                            </button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('admin_toggle_admin', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-outline-warning w-100" 
+                                    onclick="return confirm('Remove admin rights from {{ user.username }}?')">
+                                <i class="fas fa-user me-2"></i>Remove Admin
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if user.is_active %}
+                        <form action="{{ url_for('admin_toggle_active', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-outline-danger w-100" 
+                                    onclick="return confirm('Deactivate {{ user.username }}?')">
+                                <i class="fas fa-user-slash me-2"></i>Deactivate User
+                            </button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('admin_toggle_active', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('Activate {{ user.username }}?')">
+                                <i class="fas fa-user-check me-2"></i>Activate User
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if (user.get_order_count() if user.get_order_count is defined else 0) == 0 and user.id != current_user.id %}
+                        <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    onclick="return confirm('Permanently delete {{ user.username }}? This action cannot be undone.')">
+                                <i class="fas fa-trash me-2"></i>Delete User
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

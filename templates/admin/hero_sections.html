@@ -1,0 +1,169 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Hero Sections{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Hero Sections Management</h1>
+    <a href="{{ url_for('admin_add_hero_section') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Hero Section
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if hero_sections %}
+        <div class="table-responsive">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <strong>{{ hero_sections|length }}</strong> hero section(s) total
+        <span class="badge bg-success ms-2">
+            {{ hero_sections|selectattr('is_active')|list|length }} active
+        </span>
+    </div>
+    <div>
+        <button type="button" class="btn btn-outline-danger btn-sm" id="bulkDeleteBtn" style="display: none;">
+            <i class="fas fa-trash"></i> Delete Selected
+        </button>
+    </div>
+</div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th width="30">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        <th>Preview</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Order</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hero in hero_sections %}
+                    <tr>
+                         <td>
+                            <input type="checkbox" class="hero-checkbox" name="hero_ids" value="{{ hero.id }}">
+                        </td>
+                        <td>
+                            {% if hero.image %}
+                            <img src="{{ url_for('static', filename='uploads/' + hero.image) }}" 
+                                 alt="{{ hero.title }}" 
+                                 style="width: 80px; height: 50px; object-fit: cover;"
+                                 class="rounded">
+                            {% else %}
+                            <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 50px;">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ hero.title }}</strong>
+                            {% if hero.subtitle %}
+                            <br><small class="text-muted">{{ hero.subtitle[:50] }}...</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hero.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ hero.display_order }}</td>
+                        <td>{{ hero.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                {% if not hero.is_active %}
+                                <a href="{{ url_for('admin_activate_hero_section', hero_id=hero.id) }}" 
+                                   class="btn btn-sm btn-outline-success"
+                                   title="Set as Active">
+                                    <i class="fas fa-play"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('admin_edit_hero_section', hero_id=hero.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ url_for('admin_delete_hero_section', hero_id=hero.id) }}" 
+                                      method="POST" 
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this hero section?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Add bulk delete form and JavaScript -->
+            <form id="bulkDeleteForm" action="{{ url_for('admin_bulk_delete_hero_sections') }}" method="POST" style="display: none;">
+                <!-- Checkboxes will be populated here -->
+            </form>
+
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-images fa-4x text-muted mb-3"></i>
+            <h4>No Hero Sections Created</h4>
+            <p class="text-muted">Create your first hero section to display on the homepage.</p>
+            <a href="{{ url_for('admin_add_hero_section') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create First Hero Section
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+
+<script>
+// Bulk selection functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.hero-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+    
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        toggleBulkDeleteBtn();
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', toggleBulkDeleteBtn);
+    });
+    
+    function toggleBulkDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.hero-checkbox:checked').length;
+        bulkDeleteBtn.style.display = checkedCount > 0 ? 'block' : 'none';
+        bulkDeleteBtn.textContent = `Delete ${checkedCount} Selected`;
+    }
+    
+    bulkDeleteBtn.addEventListener('click', function() {
+        if (confirm(`Are you sure you want to delete ${document.querySelectorAll('.hero-checkbox:checked').length} hero sections?`)) {
+            // Populate form with selected checkboxes
+            bulkDeleteForm.innerHTML = '';
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'hero_ids';
+                    input.value = checkbox.value;
+                    bulkDeleteForm.appendChild(input);
+                }
+            });
+            bulkDeleteForm.submit();
+        }
+    });
+});
+</script>

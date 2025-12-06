@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; padding: 20px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Account Deactivated</h1>
+            <p>Important notice about your {{ app_name }} account</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{ user.username }},</h2>
+            
+            <div class="alert">
+                <strong>Notice:</strong> Your {{ app_name }} account has been <strong>deactivated</strong>.
+            </div>
+            
+            <p><strong>Account Details:</strong></p>
+            <ul>
+                <li>Account: {{ user.username }}</li>
+                <li>Email: {{ user.email }}</li>
+                <li>Deactivated by: {{ performed_by.username }}</li>
+                <li>Time: {{ now().strftime('%Y-%m-%d %H:%M') }}</li>
+                {% if reason %}
+                <li>Reason: {{ reason }}</li>
+                {% endif %}
+            </ul>
+            
+            <p><strong>What this means:</strong></p>
+            <ul>
+                <li>You cannot log in to your account</li>
+                <li>You cannot make purchases</li>
+                <li>Your account data is preserved</li>
+            </ul>
+            
+            <p>If you believe this was done in error, or if you have questions about your account status, please contact our support team immediately.</p>
+            
+            <p>Best regards,<br>The {{ app_name }} Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{ now().year }} {{ app_name }}. All rights reserved.</p>
+            <p>
+                <a href="{{ app_url }}/privacy">Privacy Policy</a> | 
+                <a href="{{ app_url }}/terms">Terms of Service</a> | 
+                <a href="mailto:{{ support_email }}">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

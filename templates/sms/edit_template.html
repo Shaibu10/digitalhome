@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Template - {{ template.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <a href="{{ url_for('sms.templates') }}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </a>
+            <h1 class="h2 mb-4">
+                <i class="fas fa-edit me-2"></i> Edit Template: {{ template.name }}
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="template_name" class="form-label">Template Name</label>
+                            <input type="text" class="form-control" id="template_name" name="template_name" 
+                                   value="{{ template.name }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if template.category == cat %}selected{% endif %}>
+                                    {{ cat.replace('_', ' ').title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2">{{ template.description or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Message Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="5" 
+                                      maxlength="500" onkeyup="updatePreview()">{{ template.content }}</textarea>
+                            <small class="form-text text-muted">
+                                Characters: <span id="char_count">{{ template.character_count }}</span>/500
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Changes
+                            </button>
+                            <a href="{{ url_for('sms.templates') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updatePreview() {
+    const content = document.getElementById('content').value;
+    document.getElementById('char_count').textContent = content.length;
+}
+</script>
+{% endblock %}

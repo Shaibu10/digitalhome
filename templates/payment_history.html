@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-3">
+                <i class="fas fa-history me-2"></i>Payment History
+            </h1>
+            <p class="text-muted">View all your payment transactions and status</p>
+        </div>
+    </div>
+
+    {% if payments %}
+    <!-- Payments Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <i class="fas fa-hashtag me-2"></i>Reference
+                                </th>
+                                <th>
+                                    <i class="fas fa-box me-2"></i>Order
+                                </th>
+                                <th>
+                                    <i class="fas fa-money-bill-wave me-2"></i>Amount
+                                </th>
+                                <th>
+                                    <i class="fas fa-credit-card me-2"></i>Method
+                                </th>
+                                <th>
+                                    <i class="fas fa-toggle-on me-2"></i>Status
+                                </th>
+                                <th>
+                                    <i class="fas fa-calendar me-2"></i>Date
+                                </th>
+                                <th>
+                                    <i class="fas fa-cog me-2"></i>Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <!-- Reference -->
+                                <td>
+                                    <code class="text-primary">{{ payment.paystack_reference[:20] }}...</code>
+                                </td>
+
+                                <!-- Order -->
+                                <td>
+                                    <a href="{{ url_for('order_detail', order_id=payment.order_id) }}" class="text-decoration-none">
+                                        {{ payment.order.order_number }}
+                                    </a>
+                                </td>
+
+                                <!-- Amount -->
+                                <td>
+                                    <strong>GH₵ {{ "%.2f"|format(payment.amount) }}</strong>
+                                </td>
+
+                                <!-- Payment Method -->
+                                <td>
+                                    {% if payment.payment_method %}
+                                        {% if payment.payment_method == 'card' %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-credit-card me-1"></i>Card
+                                            </span>
+                                        {% elif payment.payment_method == 'mobile_money' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-mobile-alt me-1"></i>Mobile Money
+                                            </span>
+                                        {% elif payment.payment_method == 'bank_transfer' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-university me-1"></i>Bank Transfer
+                                            </span>
+                                        {% elif payment.payment_method == 'ussd' %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-phone me-1"></i>USSD
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ payment.payment_method|title }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    {% if payment.status == 'success' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Successful
+                                        </span>
+                                    {% elif payment.status == 'failed' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times-circle me-1"></i>Failed
+                                        </span>
+                                    {% elif payment.status == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-hourglass-half me-1"></i>Pending
+                                        </span>
+                                    {% elif payment.status == 'abandoned' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times me-1"></i>Abandoned
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ payment.status|title }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Date -->
+                                <td>
+                                    <small class="text-muted">
+                                        {{ payment.completed_at.strftime('%Y-%m-%d %H:%M:%S') if payment.completed_at else payment.initiated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    </small>
+                                </td>
+
+                                <!-- Actions -->
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('order_detail', order_id=payment.order_id) }}" 
+                                           class="btn btn-outline-primary" title="View Order">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-secondary" type="button" 
+                                                data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                                onclick="showPaymentDetails('{{ payment.paystack_reference }}', '{{ payment.amount }}', '{{ payment.status }}', '{{ payment.payment_method or 'N/A' }}', '{{ payment.initiated_at.strftime('%Y-%m-%d %H:%M:%S') }}')"
+                                                title="View Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination Info -->
+            <div class="mt-3 text-muted text-center">
+                <small>Showing {{ payments|length }} payment(s)</small>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox" style="font-size: 4rem; color: #dee2e6;"></i>
+                    <h4 class="mt-3 mb-2 text-muted">No Payment History</h4>
+                    <p class="text-muted mb-4">
+                        You haven't made any payments yet. Start shopping to make your first order!
+                    </p>
+                    <a href="{{ url_for('products') }}" class="btn btn-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">Transaction Reference</label>
+                        <div id="detailReference" class="font-monospace">-</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">Amount</label>
+                        <div id="detailAmount" class="fw-bold">-</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">Status</label>
+                        <div id="detailStatus">-</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">Payment Method</label>
+                        <div id="detailMethod">-</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="form-label text-muted small">Transaction Date</label>
+                        <div id="detailDate">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPaymentDetails(reference, amount, status, method, date) {
+    document.getElementById('detailReference').textContent = reference;
+    document.getElementById('detailAmount').textContent = `GH₵ ${parseFloat(amount).toFixed(2)}`;
+    
+    // Status badge
+    let statusBadge = '';
+    if (status === 'success') {
+        statusBadge = '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Successful</span>';
+    } else if (status === 'failed') {
+        statusBadge = '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Failed</span>';
+    } else if (status === 'pending') {
+        statusBadge = '<span class="badge bg-warning"><i class="fas fa-hourglass-half me-1"></i>Pending</span>';
+    } else if (status === 'abandoned') {
+        statusBadge = '<span class="badge bg-secondary"><i class="fas fa-times me-1"></i>Abandoned</span>';
+    }
+    document.getElementById('detailStatus').innerHTML = statusBadge;
+    
+    // Method badge
+    let methodBadge = method;
+    if (method === 'card') {
+        methodBadge = '<span class="badge bg-info"><i class="fas fa-credit-card me-1"></i>Card</span>';
+    } else if (method === 'mobile_money') {
+        methodBadge = '<span class="badge bg-success"><i class="fas fa-mobile-alt me-1"></i>Mobile Money</span>';
+    } else if (method === 'bank_transfer') {
+        methodBadge = '<span class="badge bg-warning"><i class="fas fa-university me-1"></i>Bank Transfer</span>';
+    } else if (method === 'ussd') {
+        methodBadge = '<span class="badge bg-secondary"><i class="fas fa-phone me-1"></i>USSD</span>';
+    }
+    document.getElementById('detailMethod').innerHTML = methodBadge;
+    
+    document.getElementById('detailDate').textContent = date;
+}
+</script>
+{% endblock %}

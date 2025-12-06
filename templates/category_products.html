@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .category-product-image {
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9f9f9;
+        overflow: hidden;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px;
+    }
+    
+    .category-product-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .category-product-image {
+            min-height: 200px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .category-product-image {
+            min-height: 180px;
+        }
+    }
+</style>
+
+<!-- Dynamic Messages -->
+{% include 'dynamic_messages_display.html' %}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Breadcrumb -->
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('products') }}">Products</a></li>
+                    <li class="breadcrumb-item active">{{ category.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Category Info -->
+        <div class="col-12 mb-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h1 class="display-5">{{ category.name }}</h1>
+                    <p class="lead">{{ category.description }}</p>
+                    <span class="badge bg-primary">{{ products|length }} products</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Categories -->
+        <div class="col-lg-3 col-md-4 mb-4 mb-md-0">
+            <div class="card mb-4 sticky-md-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Categories</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{{ url_for('products') }}" 
+                           class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            All Categories
+                        </a>
+                        {% for cat in categories %}
+                        <a href="{{ url_for('category_products', category_id=cat.id) }}" 
+                           class="list-group-item list-group-item-action {% if current_category and cat.id == current_category.id %}active{% endif %}">
+                            {{ cat.name }}
+                            <span class="badge bg-primary float-end">{{ cat.products|length }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9 col-md-8">
+            {% if products %}
+            <div class="row g-3">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 col-sm-6 col-12 mb-4">
+                    <div class="card product-card h-100">
+                        {% if product.discount_price %}
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-2" style="z-index: 10;">
+                            -{{ product.discount_percentage() }}%
+                        </span>
+                        {% endif %}
+                        {% if product.is_featured %}
+                        <span class="badge bg-warning position-absolute top-0 end-0 m-2" style="z-index: 10;">Featured</span>
+                        {% endif %}
+                        
+                        <div class="category-product-image">
+                            <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                                 alt="{{ product.name }}" loading="lazy">
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text flex-grow-1">{{ product.description[:100] }}{% if product.description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="price-section mb-2">
+                                {% if product.discount_price %}
+                                <h4 class="text-danger mb-0">GH₵ {{ "%.2f"|format(product.price - product.discount_price) }}</h4>
+                                <small class="text-muted text-decoration-line-through">GH₵ {{ "%.2f"|format(product.price) }}</small>
+                                {% else %}
+                                <h4 class="text-primary mb-0">GH₵ {{ "%.2f"|format(product.price) }}</h4>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="stock-info mb-3">
+                                {% if product.is_in_stock() %}
+                                <span class="badge bg-success">In Stock</span>
+                                {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary w-100 mb-2">View Details</a>
+                                {% if current_user.is_authenticated and product.is_in_stock() %}
+                                <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-success w-100">Add to Cart</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                <h4>No products found in this category</h4>
+                <p class="text-muted">Check back later for new products in {{ category.name }}.</p>
+                <a href="{{ url_for('products') }}" class="btn btn-primary">Browse All Products</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

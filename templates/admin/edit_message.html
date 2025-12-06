@@ -1,0 +1,306 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Message - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-edit me-2"></i>Edit Dynamic Message
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form Column -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Message Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_edit_message', message_id=message.id) }}">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading me-2"></i>Title *
+                            </label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ message.title }}" placeholder="e.g., Summer Sale 2025" required>
+                            <small class="text-muted">Short, catchy title for the message</small>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">
+                                <i class="fas fa-file-alt me-2"></i>Message Content *
+                            </label>
+                            <textarea class="form-control" id="content" name="content" rows="6"
+                                      placeholder="Write your message here. HTML tags are allowed for styling."
+                                      required>{{ message.content }}</textarea>
+                            <small class="text-muted">You can use HTML for formatting (e.g., &lt;strong&gt;, &lt;em&gt;, &lt;a href=&quot;...&quot;&gt;)</small>
+                        </div>
+
+                        <!-- Message Type -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="message_type" class="form-label">
+                                    <i class="fas fa-tag me-2"></i>Message Type
+                                </label>
+                                <select class="form-select" id="message_type" name="message_type">
+                                    <option value="info" {% if message.message_type == 'info' %}selected{% endif %}>Info</option>
+                                    <option value="promotion" {% if message.message_type == 'promotion' %}selected{% endif %}>Promotion</option>
+                                    <option value="warning" {% if message.message_type == 'warning' %}selected{% endif %}>Warning</option>
+                                    <option value="alert" {% if message.message_type == 'alert' %}selected{% endif %}>Alert</option>
+                                    <option value="success" {% if message.message_type == 'success' %}selected{% endif %}>Success</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="display_location" class="form-label">
+                                    <i class="fas fa-location-dot me-2"></i>Display Location
+                                </label>
+                                <select class="form-select" id="display_location" name="display_location">
+                                    <option value="homepage" {% if message.display_location == 'homepage' %}selected{% endif %}>Homepage Only</option>
+                                    <option value="all_pages" {% if message.display_location == 'all_pages' %}selected{% endif %}>All Pages</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if message.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    <i class="fas fa-check-circle me-2"></i>Active (Message will be displayed)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Schedule -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Schedule (Optional)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_date" class="form-label">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="start_date" name="start_date"
+                                           value="{% if message.start_date %}{{ message.start_date.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                                    <small class="text-muted">When to start showing this message</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_date" class="form-label">End Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="end_date" name="end_date"
+                                           value="{% if message.end_date %}{{ message.end_date.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                                    <small class="text-muted">When to stop showing this message</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Styling -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-palette me-2"></i>Styling
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="background_color" class="form-label">Background Color</label>
+                                    <input type="color" class="form-control form-control-color" id="background_color" 
+                                           name="background_color" value="{{ message.background_color }}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="text_color" class="form-label">Text Color</label>
+                                    <input type="color" class="form-control form-control-color" id="text_color" 
+                                           name="text_color" value="{{ message.text_color }}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="icon" class="form-label">Icon</label>
+                                    <input type="text" class="form-control" id="icon" name="icon" 
+                                           value="{{ message.icon }}" placeholder="Font Awesome icon class">
+                                    <small class="text-muted">e.g., info-circle, gift, star, alert</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-mouse me-2"></i>Call To Action (Optional)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cta_text" class="form-label">Button Text</label>
+                                    <input type="text" class="form-control" id="cta_text" name="cta_text"
+                                           value="{{ message.cta_text or '' }}"
+                                           placeholder="e.g., Shop Now, Learn More">
+                                    <small class="text-muted">Leave blank for no button</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cta_url" class="form-label">Button Link</label>
+                                    <input type="url" class="form-control" id="cta_url" name="cta_url"
+                                           value="{{ message.cta_url or '' }}"
+                                           placeholder="e.g., /products, /sale">
+                                    <small class="text-muted">URL to open when button is clicked</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">
+                                <i class="fas fa-sort me-2"></i>Display Order
+                            </label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" 
+                                   value="{{ message.display_order }}" min="0">
+                            <small class="text-muted">Lower numbers appear first (0 = highest priority)</small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="{{ url_for('admin_messages') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Column -->
+        <div class="col-lg-4">
+            <!-- Live Preview -->
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Live Preview
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="preview" style="min-height: 300px; padding: 1rem; background: #f8f9fa; border-radius: 0 0 4px 4px;">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Message preview</strong>
+                            <p class="mb-0 mt-2">Your message will appear here as you type...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Analytics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Views</h6>
+                            <h4 class="mb-0">{{ message.view_count }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1">Clicks</h6>
+                            <h4 class="mb-0">{{ message.click_count }}</h4>
+                        </div>
+                    </div>
+                    {% if message.view_count > 0 %}
+                    <div class="progress" style="height: 20px;">
+                        {% set click_percentage = (message.click_count / message.view_count * 100)|int if message.view_count > 0 else 0 %}
+                        <div class="progress-bar" role="progressbar" style="width: {{ click_percentage }}%;" 
+                             aria-valuenow="{{ click_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ click_percentage }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">Click-through rate</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="card mb-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Metadata
+                    </h5>
+                </div>
+                <div class="card-body small">
+                    <div class="mb-3">
+                        <strong>Created By:</strong><br>
+                        {{ message.created_by.first_name }} {{ message.created_by.last_name }}<br>
+                        <small class="text-muted">{{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                    </div>
+                    {% if message.updated_by %}
+                    <div class="mb-3">
+                        <strong>Last Updated By:</strong><br>
+                        {{ message.updated_by.first_name }} {{ message.updated_by.last_name }}<br>
+                        <small class="text-muted">{{ message.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Keep titles short and attention-grabbing</li>
+                        <li>Use scheduling for time-limited promotions</li>
+                        <li>Color combinations should have good contrast</li>
+                        <li>Add a CTA button to drive clicks</li>
+                        <li>Monitor click-through rate in analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview
+const form = document.querySelector('form');
+const preview = document.getElementById('preview');
+
+function updatePreview() {
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    const bgColor = document.getElementById('background_color').value;
+    const textColor = document.getElementById('text_color').value;
+    const icon = document.getElementById('icon').value;
+    const ctaText = document.getElementById('cta_text').value;
+    
+    let html = `
+        <div class="alert mb-0" style="background-color: ${bgColor}; color: ${textColor}; border: none;">
+            ${icon ? `<i class="fas fa-${icon} me-2"></i>` : ''}
+            ${title ? `<strong>${title}</strong><br>` : ''}
+            ${content ? `<div class="mt-2">${content}</div>` : ''}
+            ${ctaText ? `<div class="mt-3"><a href="#" class="btn btn-sm" style="background: ${textColor}; color: ${bgColor};" onclick="return false;">${ctaText}</a></div>` : ''}
+        </div>
+    `;
+    
+    preview.innerHTML = html;
+}
+
+// Listen for changes
+document.getElementById('title').addEventListener('input', updatePreview);
+document.getElementById('content').addEventListener('input', updatePreview);
+document.getElementById('background_color').addEventListener('input', updatePreview);
+document.getElementById('text_color').addEventListener('input', updatePreview);
+document.getElementById('icon').addEventListener('input', updatePreview);
+document.getElementById('cta_text').addEventListener('input', updatePreview);
+
+// Initialize preview on page load
+updatePreview();
+</script>
+{% endblock %}

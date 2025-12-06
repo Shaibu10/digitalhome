@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Campaign Details - {{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="mb-4">
+        <a href="{{ url_for('sms.campaigns') }}" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left me-2"></i> Back to Campaigns
+        </a>
+        <h1 class="h2">{{ campaign.name }}</h1>
+    </div>
+
+    <!-- Campaign Info Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Total Recipients</h6>
+                    <h3>{{ campaign.recipient_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Messages Sent</h6>
+                    <h3>{{ campaign.messages_sent }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Delivery Rate</h6>
+                    <h3>{{ campaign.get_delivery_rate() }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Failed</h6>
+                    <h3 class="text-danger">{{ campaign.messages_failed }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Details -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Campaign Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Status:</strong> <span class="badge bg-{{ campaign.get_status_badge() }}">{{ campaign.status }}</span></p>
+                    <p><strong>Filter:</strong> {{ campaign.recipient_filter }}</p>
+                    <p><strong>Created:</strong> {{ campaign.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% if campaign.scheduled_at %}
+                    <p><strong>Scheduled For:</strong> {{ campaign.scheduled_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% endif %}
+                    {% if campaign.started_at %}
+                    <p><strong>Started:</strong> {{ campaign.started_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% endif %}
+                    {% if campaign.completed_at %}
+                    <p><strong>Completed:</strong> {{ campaign.completed_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% endif %}
+                    <p><strong>Created By:</strong> {{ campaign.created_by.username }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if campaign.status in ['draft', 'scheduled'] %}
+                    <form method="POST" action="{{ url_for('sms.send_campaign', campaign_id=campaign.id) }}" class="mb-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="confirm" name="confirmed" value="yes" required>
+                            <label class="form-check-label" for="confirm">
+                                I confirm sending to {{ campaign.recipient_count }} users
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-paper-plane me-2"></i> Send Campaign
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if campaign.messages_failed > 0 and campaign.status == 'completed' %}
+                    <form method="POST" action="{{ url_for('sms.retry_campaign_failed', campaign_id=campaign.id) }}" class="mb-2">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-redo me-2"></i> Retry Failed ({{ campaign.messages_failed }})
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if campaign.status in ['draft', 'scheduled'] %}
+                    <form method="POST" action="{{ url_for('sms.cancel_campaign', campaign_id=campaign.id) }}">
+                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Cancel this campaign?')">
+                            <i class="fas fa-ban me-2"></i> Cancel Campaign
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if campaign.status in ['draft', 'cancelled'] %}
+                    <button type="button" class="btn btn-danger w-100 mt-2" data-bs-toggle="modal" data-bs-target="#deleteModal" style="opacity: 0.8;">
+                        <i class="fas fa-trash me-2"></i> Delete Campaign
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Table -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between">
+            <h5 class="mb-0">Campaign Messages</h5>
+            <select class="form-select w-auto" onchange="window.location.href='{{ url_for('sms.view_campaign', campaign_id=campaign.id) }}?status=' + this.value">
+                <option value="">All Messages</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+            </select>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Sent</th>
+                        <th>Error</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if messages.items %}
+                        {% for msg in messages.items %}
+                        <tr>
+                            <td>{{ msg.recipient_name }}</td>
+                            <td>{{ msg.phone_number }}</td>
+                            <td><span class="badge bg-{{ msg.get_status_badge() }}">{{ msg.status }}</span></td>
+                            <td>
+                                {% if msg.sent_at %}
+                                    {{ msg.sent_at.strftime('%H:%M %d/%m') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if msg.delivery_error %}
+                                    <small class="text-danger">{{ msg.delivery_error[:50] }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No messages found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if messages.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if messages.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.view_campaign', campaign_id=campaign.id, page=messages.prev_num, status=status_filter) }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in messages.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == messages.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sms.view_campaign', campaign_id=campaign.id, page=page_num, status=status_filter) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if messages.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.view_campaign', campaign_id=campaign.id, page=messages.next_num, status=status_filter) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Delete Campaign Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Delete Campaign
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger mb-3">
+                    <strong>Warning: This action cannot be undone!</strong>
+                </p>
+                
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">Deleting Campaign: <strong>{{ campaign.name }}</strong></h6>
+                    <hr>
+                    <ul class="mb-0 ps-3">
+                        <li>All <strong>{{ campaign.recipient_count }}</strong> scheduled messages will be permanently deleted</li>
+                        <li>Campaign history will be preserved in logs</li>
+                        <li>This operation cannot be reversed</li>
+                    </ul>
+                </div>
+                
+                <p class="text-muted">
+                    To confirm deletion, please acknowledge the checkboxes below:
+                </p>
+                
+                <form id="deleteForm" method="POST" action="{{ url_for('sms.delete_campaign', campaign_id=campaign.id) }}">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="confirm1" required>
+                        <label class="form-check-label" for="confirm1">
+                            I understand all messages in this campaign will be deleted
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirm2" required>
+                        <label class="form-check-label" for="confirm2">
+                            I want to proceed with deleting campaign <strong>{{ campaign.name }}</strong>
+                        </label>
+                    </div>
+                    <input type="hidden" name="confirmed" value="yes">
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDelete" disabled>
+                    <i class="fas fa-trash me-2"></i> Yes, Delete Campaign
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enable delete button only when both checkboxes are checked
+document.addEventListener('DOMContentLoaded', function() {
+    const confirm1 = document.getElementById('confirm1');
+    const confirm2 = document.getElementById('confirm2');
+    const deleteBtn = document.getElementById('confirmDelete');
+    const deleteForm = document.getElementById('deleteForm');
+    
+    function updateDeleteButton() {
+        deleteBtn.disabled = !(confirm1.checked && confirm2.checked);
+    }
+    
+    confirm1.addEventListener('change', updateDeleteButton);
+    confirm2.addEventListener('change', updateDeleteButton);
+    
+    deleteBtn.addEventListener('click', function() {
+        if (confirm1.checked && confirm2.checked) {
+            deleteForm.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

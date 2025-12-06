@@ -1,0 +1,243 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Create Message - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-plus-circle me-2"></i>Create Dynamic Message
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form Column -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Message Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_add_message') }}">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">
+                                <i class="fas fa-heading me-2"></i>Title *
+                            </label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="e.g., Summer Sale 2025" required>
+                            <small class="text-muted">Short, catchy title for the message</small>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">
+                                <i class="fas fa-file-alt me-2"></i>Message Content *
+                            </label>
+                            <textarea class="form-control" id="content" name="content" rows="6"
+                                      placeholder="Write your message here. HTML tags are allowed for styling."
+                                      required></textarea>
+                            <small class="text-muted">You can use HTML for formatting (e.g., &lt;strong&gt;, &lt;em&gt;, &lt;a href=&quot;...&quot;&gt;)</small>
+                        </div>
+
+                        <!-- Message Type -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="message_type" class="form-label">
+                                    <i class="fas fa-tag me-2"></i>Message Type
+                                </label>
+                                <select class="form-select" id="message_type" name="message_type">
+                                    <option value="info" selected>Info</option>
+                                    <option value="promotion">Promotion</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="alert">Alert</option>
+                                    <option value="success">Success</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="display_location" class="form-label">
+                                    <i class="fas fa-location-dot me-2"></i>Display Location
+                                </label>
+                                <select class="form-select" id="display_location" name="display_location">
+                                    <option value="homepage" selected>Homepage Only</option>
+                                    <option value="all_pages">All Pages</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    <i class="fas fa-check-circle me-2"></i>Active (Message will be displayed)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Schedule -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Schedule (Optional)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_date" class="form-label">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="start_date" name="start_date">
+                                    <small class="text-muted">When to start showing this message</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_date" class="form-label">End Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="end_date" name="end_date">
+                                    <small class="text-muted">When to stop showing this message</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Styling -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-palette me-2"></i>Styling
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="background_color" class="form-label">Background Color</label>
+                                    <input type="color" class="form-control form-control-color" id="background_color" 
+                                           name="background_color" value="#007bff">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="text_color" class="form-label">Text Color</label>
+                                    <input type="color" class="form-control form-control-color" id="text_color" 
+                                           name="text_color" value="#ffffff">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="icon" class="form-label">Icon</label>
+                                    <input type="text" class="form-control" id="icon" name="icon" 
+                                           value="info-circle" placeholder="Font Awesome icon class">
+                                    <small class="text-muted">e.g., info-circle, gift, star, alert</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <div class="alert alert-light border mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-mouse me-2"></i>Call To Action (Optional)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cta_text" class="form-label">Button Text</label>
+                                    <input type="text" class="form-control" id="cta_text" name="cta_text"
+                                           placeholder="e.g., Shop Now, Learn More">
+                                    <small class="text-muted">Leave blank for no button</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cta_url" class="form-label">Button Link</label>
+                                    <input type="url" class="form-control" id="cta_url" name="cta_url"
+                                           placeholder="e.g., /products, /sale">
+                                    <small class="text-muted">URL to open when button is clicked</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div class="mb-3">
+                            <label for="display_order" class="form-label">
+                                <i class="fas fa-sort me-2"></i>Display Order
+                            </label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" 
+                                   value="0" min="0">
+                            <small class="text-muted">Lower numbers appear first (0 = highest priority)</small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Create Message
+                            </button>
+                            <a href="{{ url_for('admin_messages') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Column -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Live Preview
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="preview" style="min-height: 300px; padding: 1rem; background: #f8f9fa; border-radius: 0 0 4px 4px;">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Message preview</strong>
+                            <p class="mb-0 mt-2">Your message will appear here as you type...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Keep titles short and attention-grabbing</li>
+                        <li>Use scheduling for time-limited promotions</li>
+                        <li>Color combinations should have good contrast</li>
+                        <li>Add a CTA button to drive clicks</li>
+                        <li>Test message on mobile before publishing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview
+const form = document.querySelector('form');
+const preview = document.getElementById('preview');
+
+function updatePreview() {
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    const bgColor = document.getElementById('background_color').value;
+    const textColor = document.getElementById('text_color').value;
+    const icon = document.getElementById('icon').value;
+    const ctaText = document.getElementById('cta_text').value;
+    
+    let html = `
+        <div class="alert mb-0" style="background-color: ${bgColor}; color: ${textColor}; border: none;">
+            ${icon ? `<i class="fas fa-${icon} me-2"></i>` : ''}
+            ${title ? `<strong>${title}</strong><br>` : ''}
+            ${content ? `<div class="mt-2">${content}</div>` : ''}
+            ${ctaText ? `<div class="mt-3"><a href="#" class="btn btn-sm" style="background: ${textColor}; color: ${bgColor};" onclick="return false;">${ctaText}</a></div>` : ''}
+        </div>
+    `;
+    
+    preview.innerHTML = html;
+}
+
+// Listen for changes
+document.getElementById('title').addEventListener('input', updatePreview);
+document.getElementById('content').addEventListener('input', updatePreview);
+document.getElementById('background_color').addEventListener('input', updatePreview);
+document.getElementById('text_color').addEventListener('input', updatePreview);
+document.getElementById('icon').addEventListener('input', updatePreview);
+document.getElementById('cta_text').addEventListener('input', updatePreview);
+</script>
+{% endblock %}

@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #007bff;
+        --secondary-color: #6c757d;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --light-bg: #f8f9fa;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 500px;
+        height: 500px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite reverse;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(20px); }
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+        font-weight: 300;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+    }
+    
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-hero-primary {
+        background: white;
+        color: #667eea;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-hero-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        color: #667eea;
+    }
+    
+    .hero-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .feature-box {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255,255,255,0.1);
+        padding: 1.5rem;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .feature-icon {
+        font-size: 1.5rem;
+    }
+    
+    .feature-text {
+        font-size: 0.95rem;
+    }
+    
+    .hero-image-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero-image {
+        max-height: 450px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        animation: slideUp 0.8s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Categories Section */
+    .categories-section {
+        background: var(--light-bg);
+        padding: 4rem 0;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .section-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-header p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+    
+    .category-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    
+    .category-img-wrapper {
+        width: calc(100% + 48px);
+        margin: 0 -24px;
+        height: 200px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9f9f9;
+        flex-shrink: 0;
+    }
+    
+    .category-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    .category-card:hover .category-img-wrapper img {
+        transform: scale(1.05);
+    }
+    
+    .category-info {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-count {
+        font-size: 0.85rem;
+        color: #999;
+        margin-bottom: 1rem;
+    }
+    
+    .browse-btn {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+    
+    .browse-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+        color: white;
+    }
+    
+    /* Products Section */
+    .products-section {
+        padding: 4rem 0;
+    }
+    
+    .products-section:nth-child(odd) {
+        background: var(--light-bg);
+    }
+    
+    .product-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        border-color: var(--primary-color);
+    }
+    
+    .product-img-wrapper {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        background: #f9f9f9;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 220px;
+    }
+    
+    .product-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+        display: block;
+        padding: 10px;
+    }
+    
+    @media (max-width: 768px) {
+        .product-img-wrapper {
+            min-height: 180px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .product-img-wrapper {
+            min-height: 150px;
+        }
+    }
+    
+    .product-card:hover .product-img-wrapper img {
+        transform: scale(1.05);
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    .badge-sale {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .badge-new {
+        background: linear-gradient(135deg, var(--success-color) 0%, #1e7e34 100%);
+        color: white;
+    }
+    
+    .product-body {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .product-price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        flex: 1;
+    }
+    
+    .price-sale {
+        color: var(--danger-color);
+    }
+    
+    .price-original {
+        font-size: 0.9rem;
+        color: #999;
+        text-decoration: line-through;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .product-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .btn-view {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+    
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+        color: white;
+    }
+    
+    .btn-add-cart {
+        background: linear-gradient(135deg, var(--success-color) 0%, #1e7e34 100%);
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        border: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+    
+    .btn-add-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+        color: white;
+    }
+    
+    .section-container {
+        margin-bottom: 2rem;
+    }
+</style>
+
+<!-- Dynamic Messages Section -->
+{% include 'dynamic_messages_display.html' %}
+
+<!-- Hero Section -->
+{% if hero_section %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title">{{ hero_section.title }}</h1>
+                {% if hero_section.subtitle %}
+                <p class="hero-subtitle">{{ hero_section.subtitle }}</p>
+                {% endif %}
+                
+                <div class="hero-buttons">
+                    <a href="{{ hero_section.button_url }}" class="btn-hero-primary">
+                        <i class="fas fa-shopping-bag"></i>{{ hero_section.button_text }}
+                    </a>
+                </div>
+                
+                <div class="hero-features">
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-truck"></i></div>
+                        <div class="feature-text">
+                            <strong>Free Shipping</strong>
+                            <p>On orders over GH₵{{ "%.2f"|format(settings.free_shipping_threshold) }}</p>
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                        <div class="feature-text">
+                            <strong>Secure Payment</strong>
+                            <p>100% safe transactions</p>
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-headset"></i></div>
+                        <div class="feature-text">
+                            <strong>24/7 Support</strong>
+                            <p>Always here to help</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                {% if hero_section.image %}
+                <img src="{{ url_for('static', filename='uploads/' + hero_section.image) }}" 
+                     alt="{{ hero_section.title }}" 
+                     class="hero-image">
+                {% else %}
+                <div class="text-center text-white">
+                    <i class="fas fa-image display-1 opacity-25"></i>
+                    <p class="mt-2 opacity-50">Hero image coming soon</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title">Welcome to Digital Home</h1>
+                <p class="hero-subtitle">Discover amazing products at unbeatable prices. Shop with confidence!</p>
+                
+                <div class="hero-buttons">
+                    <a href="{{ url_for('products') }}" class="btn-hero-primary">
+                        <i class="fas fa-shopping-bag"></i>Start Shopping
+                    </a>
+                </div>
+                
+                <div class="hero-features">
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-truck"></i></div>
+                        <div class="feature-text">
+                            <strong>Free Shipping</strong>
+                            <p>On orders over GH₵{{ "%.2f"|format(settings.free_shipping_threshold) }}</p>
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                        <div class="feature-text">
+                            <strong>Secure Payment</strong>
+                            <p>100% safe transactions</p>
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon"><i class="fas fa-headset"></i></div>
+                        <div class="feature-text">
+                            <strong>24/7 Support</strong>
+                            <p>Always here to help</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div style="background: rgba(255,255,255,0.1); height: 400px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <div class="text-center text-white">
+                        <i class="fas fa-shopping-cart display-1 opacity-75 mb-3"></i>
+                        <p class="opacity-75">Welcome to Digital Home</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="categories-section centered">
+    <div class="container">
+        <div class="section-header">
+            <h2>Shop by Category</h2>
+            <p>Browse our extensive collection of high-quality products</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <a href="{{ url_for('category_products', category_id=category.id) }}" class="text-decoration-none">
+                    <div class="category-card">
+                        <div class="category-img-wrapper">
+                            <img src="{{ url_for('static', filename='uploads/' + category.image) if category.image else url_for('static', filename='images/default-category.jpg') }}" 
+                                 alt="{{ category.name }}" loading="lazy">
+                        </div>
+                        <div class="category-info">
+                            <h5 class="category-name">{{ category.name }}</h5>
+                            <p class="category-count">
+                                {{ category.products|length }} product{% if category.products|length != 1 %}s{% endif %}
+                            </p>
+                            <a href="{{ url_for('category_products', category_id=category.id) }}" class="browse-btn">
+                                Browse <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products Section -->
+{% if featured_products %}
+<section class="products-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Featured Products</h2>
+            <p>Check out our hand-picked selection of premium items</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+                <div class="product-card h-100">
+                    <div class="product-img-wrapper">
+                        {% if product.discount_price %}
+                        <span class="product-badge badge-sale">-{{ product.discount_percentage() }}%</span>
+                        {% endif %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                             alt="{{ product.name }}" loading="lazy">
+                    </div>
+                    
+                    <div class="product-body">
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        
+                        <div class="product-price">
+                            {% if product.discount_price %}
+                            <span class="price-original">GH₵ {{ "%.2f"|format(product.price) }}</span>
+                            <span class="price-sale">GH₵ {{ "%.2f"|format(product.price - product.discount_price) }}</span>
+                            {% else %}
+                            GH₵ {{ "%.2f"|format(product.price) }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="product-actions">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn-view">
+                                <i class="fas fa-eye"></i>View
+                            </a>
+                            {% if current_user.is_authenticated and product.is_in_stock() %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" style="display: contents;">
+                                <button type="submit" class="btn-add-cart">
+                                    <i class="fas fa-cart-plus"></i>Add
+                                </button>
+                            </form>
+                            {% elif not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.login') }}" class="btn-view">
+                                <i class="fas fa-sign-in-alt"></i>Login
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- New Arrivals Section -->
+{% if new_products %}
+<section class="products-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>New Arrivals</h2>
+            <p>Explore the latest additions to our store</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in new_products %}
+            <div class="col-lg-3 col-md-6">
+                <div class="product-card">
+                    <div class="product-img-wrapper">
+                        <span class="product-badge badge-new">New</span>
+                        <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                             alt="{{ product.name }}">
+                    </div>
+                    
+                    <div class="product-body">
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        
+                        <div class="product-price">
+                            {% if product.discount_price %}
+                            <span class="price-original">GH₵ {{ "%.2f"|format(product.price) }}</span>
+                            <span class="price-sale">GH₵ {{ "%.2f"|format(product.price - product.discount_price) }}</span>
+                            {% else %}
+                            GH₵ {{ "%.2f"|format(product.price) }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="product-actions">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn-view">
+                                <i class="fas fa-eye"></i>View
+                            </a>
+                            {% if current_user.is_authenticated and product.is_in_stock() %}
+                            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" style="display: contents;">
+                                <button type="submit" class="btn-add-cart">
+                                    <i class="fas fa-cart-plus"></i>Add
+                                </button>
+                            </form>
+                            {% elif not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.login') }}" class="btn-view">
+                                <i class="fas fa-sign-in-alt"></i>Login
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

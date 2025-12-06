@@ -1,0 +1,197 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dynamic Messages - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-bullhorn me-2"></i>Dynamic Messages
+                </h1>
+                <a href="{{ url_for('admin_add_message') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create Message
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('admin_messages', status='all') }}" 
+                   class="btn btn-outline-secondary {% if status_filter == 'all' %}active{% endif %}">
+                    All Messages
+                </a>
+                <a href="{{ url_for('admin_messages', status='active') }}" 
+                   class="btn btn-outline-success {% if status_filter == 'active' %}active{% endif %}">
+                    <i class="fas fa-check-circle me-1"></i>Active
+                </a>
+                <a href="{{ url_for('admin_messages', status='inactive') }}" 
+                   class="btn btn-outline-danger {% if status_filter == 'inactive' %}active{% endif %}">
+                    <i class="fas fa-times-circle me-1"></i>Inactive
+                </a>
+                <a href="{{ url_for('admin_messages', status='scheduled') }}" 
+                   class="btn btn-outline-info {% if status_filter == 'scheduled' %}active{% endif %}">
+                    <i class="fas fa-calendar me-1"></i>Scheduled
+                </a>
+                <a href="{{ url_for('admin_messages', status='expired') }}" 
+                   class="btn btn-outline-warning {% if status_filter == 'expired' %}active{% endif %}">
+                    <i class="fas fa-exclamation me-1"></i>Expired
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Table -->
+    <div class="card">
+        <div class="table-responsive">
+            {% if messages %}
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Schedule</th>
+                        <th>Analytics</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in messages %}
+                    <tr>
+                        <td>
+                            <strong>{{ message.title }}</strong>
+                            <br>
+                            <small class="text-muted">By: {{ message.created_by.username }} on {{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </td>
+                        <td>
+                            {% if message.message_type == 'info' %}
+                                <span class="badge bg-info">Info</span>
+                            {% elif message.message_type == 'warning' %}
+                                <span class="badge bg-warning">Warning</span>
+                            {% elif message.message_type == 'promotion' %}
+                                <span class="badge bg-success">Promotion</span>
+                            {% elif message.message_type == 'alert' %}
+                                <span class="badge bg-danger">Alert</span>
+                            {% elif message.message_type == 'success' %}
+                                <span class="badge bg-success">Success</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ message.display_location|replace('_', ' ')|title }}
+                        </td>
+                        <td>
+                            {% if message.is_currently_active() %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Active
+                                </span>
+                            {% elif message.is_scheduled() %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-calendar me-1"></i>Scheduled
+                                </span>
+                            {% elif message.is_expired() %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation me-1"></i>Expired
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-pause-circle me-1"></i>Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>
+                                {% if message.start_date %}
+                                    From: {{ message.start_date.strftime('%m/%d %H:%M') }}
+                                    <br>
+                                {% endif %}
+                                {% if message.end_date %}
+                                    To: {{ message.end_date.strftime('%m/%d %H:%M') }}
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <small>
+                                <i class="fas fa-eye me-1"></i>{{ message.view_count }} views
+                                <br>
+                                <i class="fas fa-mouse me-1"></i>{{ message.click_count }} clicks
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('admin_edit_message', message_id=message.id) }}" 
+                                   class="btn btn-outline-primary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin_toggle_message', message_id=message.id) }}" 
+                                   class="btn btn-outline-{{ 'success' if message.is_active else 'danger' }}" 
+                                   title="{{ 'Disable' if message.is_active else 'Enable' }}">
+                                    <i class="fas fa-{{ 'toggle-on' if message.is_active else 'toggle-off' }}"></i>
+                                </a>
+                                <form action="{{ url_for('admin_delete_message', message_id=message.id) }}" 
+                                      method="POST" style="display: inline;" 
+                                      onsubmit="return confirm('Delete this message?');">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 d-block" style="opacity: 0.3;"></i>
+                <p>No messages found</p>
+                <a href="{{ url_for('admin_add_message') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i>Create First Message
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Messages</h5>
+                    <h2 class="mb-0">{{ messages|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Active Now</h5>
+                    <h2 class="mb-0">{{ messages|selectattr('is_currently_active')|list|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Views</h5>
+                    <h2 class="mb-0">{{ messages|map(attribute='view_count')|sum }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clicks</h5>
+                    <h2 class="mb-0">{{ messages|map(attribute='click_count')|sum }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

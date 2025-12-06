@@ -1,0 +1,338 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-2">Review Moderation</h2>
+            <p class="text-muted">Manage and approve customer product reviews</p>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="text-primary text-uppercase font-weight-bold text-xs mb-1">Total Reviews</div>
+                    <div class="h3 mb-0">{{ stats.total }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning h-100 py-2">
+                <div class="card-body">
+                    <div class="text-warning text-uppercase font-weight-bold text-xs mb-1">Pending Approval</div>
+                    <div class="h3 mb-0">{{ stats.pending }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="text-success text-uppercase font-weight-bold text-xs mb-1">Approved</div>
+                    <div class="h3 mb-0">{{ stats.approved }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info h-100 py-2">
+                <div class="card-body">
+                    <div class="text-info text-uppercase font-weight-bold text-xs mb-1">Average Rating</div>
+                    <div class="h3 mb-0" style="color: #ffc107;">
+                        ★ {{ stats.avg_rating }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Sorting -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row gap-2">
+                <div class="col-auto">
+                    <a href="{{ url_for('admin_reviews', status='pending') }}" 
+                       class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Pending ({{ stats.pending }})
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('admin_reviews', status='approved') }}" 
+                       class="btn btn-sm {% if status_filter == 'approved' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Approved ({{ stats.approved }})
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <a href="{{ url_for('admin_reviews', status='all') }}" 
+                       class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        All Reviews ({{ stats.total }})
+                    </a>
+                </div>
+                <div class="col-auto ms-auto">
+                    <select class="form-select form-select-sm" id="sort-select" onchange="window.location.href='{{ url_for('admin_reviews') }}?status={{ status_filter }}&sort=' + this.value">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rating</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 15%;">Product</th>
+                        <th style="width: 35%;">Review</th>
+                        <th style="width: 15%;">Customer</th>
+                        <th style="width: 10%;">Rating</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if reviews.items %}
+                        {% for review in reviews.items %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('product_detail', product_id=review.product_id) }}" target="_blank" 
+                                   class="text-decoration-none">
+                                    {{ review.product.name[:30] }}...
+                                </a>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ review.title[:50] }}...</strong>
+                                    <p class="text-muted small mb-0">{{ review.content[:100] }}...</p>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ review.user.full_name or review.user.email.split('@')[0] }}<br>
+                                    <span class="text-xs">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+                                </small>
+                            </td>
+                            <td>
+                                <span style="color: #ffc107; font-size: 1.2rem;">
+                                    {% for i in range(review.rating) %}★{% endfor %}{% for i in range(5-review.rating) %}☆{% endfor %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if review.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if not review.is_approved %}
+                                    <button type="button" class="btn btn-success" 
+                                            onclick="approveReview({{ review.id }}, this)">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button type="button" class="btn btn-danger" 
+                                            onclick="rejectReview({{ review.id }}, this)">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                    {% else %}
+                                    <a href="{{ url_for('product_detail', product_id=review.product_id) }}" 
+                                       class="btn btn-info" target="_blank">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Review Detail Row (Hidden) -->
+                        <tr class="review-detail-row" id="detail-{{ review.id }}" style="display: none;">
+                            <td colspan="6" class="p-3 bg-light">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6>Full Review</h6>
+                                        <p class="text-muted">{{ review.content }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6>Review Info</h6>
+                                        <ul class="list-unstyled small">
+                                            <li><strong>Submitted:</strong> {{ review.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+                                            <li><strong>Last Updated:</strong> {{ review.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+                                            <li><strong>Helpful Count:</strong> {{ review.helpful_count }}</li>
+                                            <li><strong>Customer Email:</strong> {{ review.user.email }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            {% if status_filter == 'pending' %}
+                            No pending reviews to moderate
+                            {% else %}
+                            No reviews found
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if reviews.pages > 1 %}
+        <nav class="d-flex justify-content-center py-3" aria-label="Page navigation">
+            <ul class="pagination pagination-sm">
+                {% if reviews.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_reviews', page=reviews.prev_num, status=status_filter, sort=sort_by) }}">
+                        Previous
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+                {% endif %}
+
+                {% for page_num in reviews.iter_pages(left_edge=1, left_margin=1, right_margin=1, right_edge=1) %}
+                    {% if page_num %}
+                        {% if page_num == reviews.page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_reviews', page=page_num, status=status_filter, sort=sort_by) }}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if reviews.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_reviews', page=reviews.next_num, status=status_filter, sort=sort_by) }}">
+                        Next
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Next</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+</style>
+
+<script>
+async function approveReview(reviewId, button) {
+    if (!confirm('Are you sure you want to approve this review?')) return;
+    
+    try {
+        const response = await fetch(`/admin/review/${reviewId}/approve`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const row = button.closest('tr');
+            row.style.opacity = '0.6';
+            button.disabled = true;
+            
+            // Update status badge
+            const statusCell = row.querySelector('td:nth-child(5)');
+            statusCell.innerHTML = '<span class="badge bg-success">Approved</span>';
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred');
+    }
+}
+
+async function rejectReview(reviewId, button) {
+    if (!confirm('Are you sure you want to reject and delete this review?')) return;
+    
+    try {
+        const response = await fetch(`/admin/review/${reviewId}/reject`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const row = button.closest('tr');
+            row.style.opacity = '0.5';
+            row.style.textDecoration = 'line-through';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred');
+    }
+}
+
+// Toggle review details
+document.querySelectorAll('table tbody tr:not(.review-detail-row)').forEach(row => {
+    row.addEventListener('click', function(e) {
+        // Don't toggle if clicking on buttons
+        if (e.target.closest('button, a')) return;
+        
+        const detailRow = document.getElementById('detail-' + this.cells[0].textContent);
+        if (detailRow) {
+            detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

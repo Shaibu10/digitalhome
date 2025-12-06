@@ -1,0 +1,660 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - User Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2">User Management</h1>
+            <p class="text-muted mb-0">Manage user accounts, permissions, and access</p>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary" id="exportUsers">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Advanced Filters Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>Filters & Search
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin_users') }}" id="filterForm">
+                <div class="row g-3">
+                    <!-- Search Box -->
+                    <div class="col-md-4">
+                        <label class="form-label">Search Users</label>
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="search" 
+                                   placeholder="Search by username, email, or ID..."
+                                   value="{{ search_query }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status" onchange="this.form.submit()">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Role Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role" onchange="this.form.submit()">
+                            <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All Roles</option>
+                            <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admins Only</option>
+                            <option value="user" {% if role_filter == 'user' %}selected{% endif %}>Users Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Join Date</label>
+                        <select class="form-select" name="date_filter" onchange="this.form.submit()">
+                            <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+                            <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+                            <option value="week" {% if date_filter == 'week' %}selected{% endif %}>This Week</option>
+                            <option value="month" {% if date_filter == 'month' %}selected{% endif %}>This Month</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort By -->
+                    <div class="col-md-2">
+                        <label class="form-label">Sort By</label>
+                        <select class="form-select" name="sort_by" onchange="this.form.submit()">
+                            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Username A-Z</option>
+                            <option value="last_login" {% if sort_by == 'last_login' %}selected{% endif %}>Last Login</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                {% if search_query or status_filter != 'all' or role_filter != 'all' or date_filter != 'all' %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            <small class="text-muted">Active Filters:</small>
+                            {% if search_query %}
+                            <span class="badge bg-primary">
+                                Search: "{{ search_query }}"
+                                <a href="{{ remove_filter_url('search') }}" class="text-white ms-1">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </span>
+                            {% endif %}
+                            {% if status_filter != 'all' %}
+                            <span class="badge bg-info">
+                                Status: {{ status_filter|title }}
+                                <a href="{{ remove_filter_url('status') }}" class="text-white ms-1">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </span>
+                            {% endif %}
+                            {% if role_filter != 'all' %}
+                            <span class="badge bg-warning">
+                                Role: {{ role_filter|title }}
+                                <a href="{{ remove_filter_url('role') }}" class="text-white ms-1">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </span>
+                            {% endif %}
+                            {% if date_filter != 'all' %}
+                            <span class="badge bg-success">
+                                Date: {{ date_filter|title }}
+                                <a href="{{ remove_filter_url('date_filter') }}" class="text-white ms-1">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </span>
+                            {% endif %}
+                            <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-secondary">
+                                Clear All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Users</div>
+                            <div class="h5 mb-0">{{ total_users }}</div>
+                            <small class="text-white-50">{{ users|length }} matching filters</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Active Users</div>
+                            <div class="h5 mb-0">{{ active_users }}</div>
+                            <small class="text-white-50">{{ users|selectattr('is_active')|list|length }} matching</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Admin Users</div>
+                            <div class="h5 mb-0">{{ admin_users }}</div>
+                            <small class="text-white-50">{{ users|selectattr('is_admin')|list|length }} matching</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-shield fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">New Today</div>
+                            <div class="h5 mb-0">{{ today_users }}</div>
+                            <small class="text-white-50">
+                                {% set new_today_count = 0 %}
+                                {% for user in users %}
+                                    {% if user.created_at and user.created_at.date() == today %}
+                                        {% set new_today_count = new_today_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ new_today_count }} matching
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="card-title mb-0">
+                        Users List 
+                        <span class="text-muted">({{ users|length }} results)</span>
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllUsers()">
+                            <i class="fas fa-check-square me-1"></i>Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="30">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th>User</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Orders</th>
+                            <th>Joined</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="user-checkbox" value="{{ user.id }}" 
+                                       {% if user.id == current_user.id %}disabled{% endif %}>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                        <span class="text-white fw-bold">{{ user.username[0]|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ user.username }}</h6>
+                                        <small class="text-muted">ID: {{ user.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-medium">{{ user.email }}</div>
+                                    {% if search_query and search_query in user.email %}
+                                    <small class="text-success">
+                                        <i class="fas fa-search me-1"></i>Email match
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    {% if user.is_admin %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-shield-alt me-1"></i>Admin
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">User</span>
+                                    {% endif %}
+                                    
+                                    {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-center">
+                                    <div class="h6 mb-0">{{ user.get_order_count() }}</div>
+                                    <small class="text-muted">orders</small>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ user.created_at.strftime('%Y-%m-%d') }}</small>
+                                <br>
+                                <small class="text-muted">{{ user.created_at.strftime('%H:%M') }}</small>
+                            </td>
+                            <td>
+                                {% if user.last_login %}
+                                <small class="text-muted">{{ user.last_login.strftime('%Y-%m-%d') }}</small>
+                                <br>
+                                <small class="text-muted">{{ user.last_login.strftime('%H:%M') }}</small>
+                                {% else %}
+                                <small class="text-muted">Never</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('admin_view_user', user_id=user.id) }}">
+                                                <i class="fas fa-eye me-2"></i>View Details
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        {% if not user.is_admin %}
+                                        <li>
+                                            <a class="dropdown-item text-warning" 
+                                               href="{{ url_for('admin_toggle_admin', user_id=user.id) }}"
+                                               onclick="return confirm('Make {{ user.username }} an admin?')">
+                                                <i class="fas fa-user-shield me-2"></i>Make Admin
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li>
+                                            <a class="dropdown-item text-warning" 
+                                               href="{{ url_for('admin_toggle_admin', user_id=user.id) }}"
+                                               onclick="return confirm('Remove admin rights from {{ user.username }}?')">
+                                                <i class="fas fa-user me-2"></i>Remove Admin
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        
+                                        {% if user.is_active %}
+                                        <li>
+                                            <a class="dropdown-item text-danger" 
+                                               href="{{ url_for('admin_toggle_active', user_id=user.id) }}"
+                                               onclick="return confirm('Deactivate {{ user.username }}?')">
+                                                <i class="fas fa-user-slash me-2"></i>Deactivate
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li>
+                                            <a class="dropdown-item text-success" 
+                                               href="{{ url_for('admin_toggle_active', user_id=user.id) }}"
+                                               onclick="return confirm('Activate {{ user.username }}?')">
+                                                <i class="fas fa-user-check me-2"></i>Activate
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        
+                                        {% if user.get_order_count() == 0 and user.id != current_user.id %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" 
+                                                  method="POST" class="d-inline">
+                                                <button type="submit" class="dropdown-item text-danger" 
+                                                        onclick="return confirm('Permanently delete {{ user.username }}?')">
+                                                    <i class="fas fa-trash me-2"></i>Delete User
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="text-muted" id="selectedCount">0 users selected</span>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="bulkActivate()" id="bulkActivateBtn">
+                                <i class="fas fa-user-check me-1"></i>Activate Selected
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="bulkDeactivate()" id="bulkDeactivateBtn">
+                                <i class="fas fa-user-slash me-1"></i>Deactivate Selected
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="bulkDelete()" id="bulkDeleteBtn">
+                                <i class="fas fa-trash me-1"></i>Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                <h4>No Users Found</h4>
+                <p class="text-muted">
+                    {% if search_query or status_filter != 'all' or role_filter != 'all' or date_filter != 'all' %}
+                    No users match your current filters. Try adjusting your search criteria.
+                    {% else %}
+                    There are no users in the system yet.
+                    {% endif %}
+                </p>
+                {% if search_query or status_filter != 'all' or role_filter != 'all' or date_filter != 'all' %}
+                <a href="{{ url_for('admin_users') }}" class="btn btn-primary">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.dropdown-menu {
+    font-size: 0.875rem;
+}
+
+.user-checkbox:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchUsers');
+    const usersTable = document.getElementById('usersTable');
+    
+    if (searchInput && usersTable) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const tbody = usersTable.getElementsByTagName('tbody')[0];
+            if (tbody) {
+                const rows = tbody.getElementsByTagName('tr');
+                
+                for (let row of rows) {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                }
+            }
+        });
+    }
+
+    // Checkbox selection
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+});
+
+// Selection functions
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.user-checkbox:not(:disabled)');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedCount();
+}
+
+function selectAllUsers() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:not(:disabled)');
+    checkboxes.forEach(cb => cb.checked = true);
+    document.getElementById('selectAll').checked = true;
+    updateSelectedCount();
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.user-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = `${selected} users selected`;
+}
+
+// Bulk action functions
+function bulkActivate() {
+    const selectedIds = getSelectedUserIds();
+    if (selectedIds.length === 0) {
+        alert('Please select at least one user');
+        return;
+    }
+    if (confirm(`Activate ${selectedIds.length} selected user(s)?`)) {
+        performBulkAction('/api/admin/users/bulk_activate', selectedIds, 'Activating users...');
+    }
+}
+
+function bulkDeactivate() {
+    const selectedIds = getSelectedUserIds();
+    if (selectedIds.length === 0) {
+        alert('Please select at least one user');
+        return;
+    }
+    if (confirm(`Deactivate ${selectedIds.length} selected user(s)?`)) {
+        performBulkAction('/api/admin/users/bulk_deactivate', selectedIds, 'Deactivating users...');
+    }
+}
+
+function bulkDelete() {
+    const selectedIds = getSelectedUserIds();
+    if (selectedIds.length === 0) {
+        alert('Please select at least one user');
+        return;
+    }
+    if (confirm(`WARNING: Permanently delete ${selectedIds.length} selected user(s)? This cannot be undone.\n\nUsers with order history will be protected and not deleted.`)) {
+        performBulkAction('/api/admin/users/bulk_delete', selectedIds, 'Deleting users...');
+    }
+}
+
+function performBulkAction(endpoint, userIds, progressMessage) {
+    // Disable buttons during operation
+    const buttons = document.querySelectorAll('#bulkActivateBtn, #bulkDeactivateBtn, #bulkDeleteBtn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Show progress
+    const originalText = document.querySelector('button:focus')?.innerHTML || progressMessage;
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_ids: userIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Re-enable buttons
+        buttons.forEach(btn => btn.disabled = false);
+        
+        if (data.success) {
+            // Show success message
+            showAlert(data.message, 'success');
+            
+            // Clear selection
+            clearSelection();
+            
+            // Reload page after 1 second to reflect changes
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        // Re-enable buttons
+        buttons.forEach(btn => btn.disabled = false);
+        
+        console.error('Error:', error);
+        showAlert('An error occurred while performing the action', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert at the top of the container
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function getSelectedUserIds() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Export functionality
+document.getElementById('exportUsers').addEventListener('click', function() {
+    const searchParams = new URLSearchParams(window.location.search);
+    const filterText = searchParams.toString() ? ` (Filtered)` : '';
+    
+    const rows = [];
+    const headers = ['ID', 'Username', 'Email', 'Status', 'Role', 'Orders', 'Joined', 'Last Login'];
+    rows.push(headers.join(','));
+    
+    {% for user in users %}
+    rows.push([
+        '{{ user.id }}',
+        `"{{ user.username }}"`,
+        `"{{ user.email }}"`,
+        '{{ "Active" if user.is_active else "Inactive" }}',
+        '{{ "Admin" if user.is_admin else "User" }}',
+        '{{ user.get_order_count() }}',
+        '{{ user.created_at.strftime("%Y-%m-%d %H:%M") }}',
+        '{% if user.last_login %}{{ user.last_login.strftime("%Y-%m-%d %H:%M") }}{% else %}Never{% endif %}'
+    ].join(','));
+    {% endfor %}
+    
+    const csvContent = "data:text/csv;charset=utf-8," + rows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `users_export${filterText}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+// Helper function for removing individual filters
+function removeFilter(param) {
+    const url = new URL(window.location);
+    url.searchParams.delete(param);
+    window.location = url;
+}
+</script>
+
+<script>
+// Make removeFilter available globally
+window.removeFilter = removeFilter;
+</script>
+{% endblock %}

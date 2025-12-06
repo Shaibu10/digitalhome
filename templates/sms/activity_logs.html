@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Activity Logs{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="h2 mb-4">
+        <i class="fas fa-history me-2"></i> SMS Activity Logs
+    </h1>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Action</th>
+                        <th>Admin</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs.items %}
+                        {% for log in logs.items %}
+                        <tr>
+                            <td>
+                                <code>{{ log.action.replace('_', ' ') }}</code>
+                            </td>
+                            <td>{{ log.admin.username }}</td>
+                            <td>
+                                {% set status_color = 'success' if log.status == 'success' else 'warning' if log.status == 'warning' else 'danger' %}
+                                <span class="badge bg-{{ status_color }}">{{ log.status }}</span>
+                            </td>
+                            <td>{{ log.message[:60] }}</td>
+                            <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No activity logs found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if logs.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if logs.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.activity_logs', page=logs.prev_num) }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in logs.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sms.activity_logs', page=page_num) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if logs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.activity_logs', page=logs.next_num) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

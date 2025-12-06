@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Create SMS Template{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-plus me-2"></i> Create SMS Template
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="template_name" class="form-label">Template Name</label>
+                            <input type="text" class="form-control" id="template_name" name="template_name" 
+                                   placeholder="e.g., Order Confirmation" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">-- Select Category --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat.replace('_', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="2" 
+                                      placeholder="Describe when this template is used..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Message Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="5" 
+                                      placeholder="Enter template content. Use {variable_name} for dynamic content..." 
+                                      maxlength="500" onkeyup="updatePreview()" required></textarea>
+                            <small class="form-text text-muted">
+                                Characters: <span id="char_count">0</span>/500 
+                                <span id="sms_parts" class="badge bg-info ms-2">1 SMS</span>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Available Variables (extracted from content)</h6>
+                            <div id="variables-list" class="alert alert-info">
+                                <small>Variables will appear as you type...</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Preview</h6>
+                            <div id="preview" class="alert alert-secondary" style="min-height: 60px;">
+                                Your template will appear here...
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Create Template
+                            </button>
+                            <a href="{{ url_for('sms.templates') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updatePreview() {
+    const content = document.getElementById('content').value;
+    const length = content.length;
+    document.getElementById('char_count').textContent = length;
+    
+    // Calculate SMS parts
+    let parts = 1;
+    if (length > 160) {
+        parts = Math.ceil((length - 160) / 153) + 1;
+    }
+    document.getElementById('sms_parts').textContent = parts + ' SMS';
+    
+    // Extract variables
+    const regex = /\{(\w+)\}/g;
+    const matches = [...content.matchAll(regex)];
+    const variables = [...new Set(matches.map(m => m[1]))];
+    
+    const varsList = document.getElementById('variables-list');
+    if (variables.length > 0) {
+        varsList.innerHTML = '<strong>Variables found:</strong><br>' + 
+            variables.map(v => `<code>${{${v}}}</code>`).join(', ');
+    } else {
+        varsList.innerHTML = '<small class="text-muted">No variables found. Add variables using {variable_name} format.</small>';
+    }
+    
+    // Update preview
+    let preview = content;
+    variables.forEach(v => {
+        preview = preview.replace(new RegExp(`{${v}}`, 'g'), `[${v.toUpperCase()}]`);
+    });
+    document.getElementById('preview').textContent = preview || 'Your template will appear here...';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Digital Home Store{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dynamic_messages.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Digital Home Store</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('products') }}">Products</a>
+                    </li>
+                   
+                </ul>
+                <!-- In your base.html navigation -->
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{{ url_for('cart') }}" title="Shopping Cart">
+                                <i class="fas fa-shopping-cart fa-lg"></i>
+                                {% if current_user.cart_items|length > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ current_user.cart_items|length }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('view_orders') }}"><i class="fas fa-box me-2"></i>My Orders</a></li>
+                                {% if current_user.is_admin %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>{{ contact_settings.business_name }}</h5>
+                    <p>{{ contact_settings.business_description }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-light text-decoration-none">Home</a></li>
+                        <li><a href="{{ url_for('products') }}" class="text-light text-decoration-none">Products</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact</h5>
+                    <p>
+                        <i class="fas fa-envelope me-2"></i>Email: <a href="mailto:{{ contact_settings.email }}" class="text-light text-decoration-none">{{ contact_settings.email }}</a><br>
+                        <i class="fas fa-phone me-2"></i>Phone: <a href="tel:{{ contact_settings.phone }}" class="text-light text-decoration-none">{{ contact_settings.phone }}</a>
+                        {% if contact_settings.phone_whatsapp %}
+                        <br><i class="fab fa-whatsapp me-2"></i>WhatsApp: <a href="https://wa.me/{{ contact_settings.phone_whatsapp.replace(' ', '').replace('-', '') }}" target="_blank" class="text-light text-decoration-none">{{ contact_settings.phone_whatsapp }}</a>
+                        {% endif %}
+                    </p>
+                    
+                    <!-- Social Media Links -->
+                    {% if contact_settings.get_active_social_links() %}
+                    <div class="mt-3">
+                        <small class="d-block mb-2 text-muted">Follow Us:</small>
+                        {% if contact_settings.facebook_url %}
+                        <a href="{{ contact_settings.facebook_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.twitter_url %}
+                        <a href="{{ contact_settings.twitter_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.instagram_url %}
+                        <a href="{{ contact_settings.instagram_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.linkedin_url %}
+                        <a href="{{ contact_settings.linkedin_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.youtube_url %}
+                        <a href="{{ contact_settings.youtube_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.tiktok_url %}
+                        <a href="{{ contact_settings.tiktok_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="TikTok">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.telegram_url %}
+                        <a href="{{ contact_settings.telegram_url }}" target="_blank" rel="noopener" class="text-light text-decoration-none me-3" title="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Footer Bottom -->
+            <hr class="my-3 opacity-50">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="small mb-0">&copy; {{ now.year }} {{ contact_settings.business_name }}. All rights reserved.</p>
+                    {% if contact_settings.address or contact_settings.city or contact_settings.country %}
+                    <p class="small text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {% if contact_settings.address %}{{ contact_settings.address }}, {% endif %}
+                        {% if contact_settings.city %}{{ contact_settings.city }}, {% endif %}
+                        {% if contact_settings.country %}{{ contact_settings.country }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,388 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Contact Settings - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-address-card me-2"></i>Contact & Social Media Settings
+            </h1>
+        </div>
+    </div>
+
+    <!-- Settings Tabs -->
+    <ul class="nav nav-tabs mb-4" id="contactTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="contact-tab" data-bs-toggle="tab" 
+                    data-bs-target="#contact" type="button" role="tab">
+                <i class="fas fa-phone me-2"></i>Contact Information
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="social-tab" data-bs-toggle="tab" 
+                    data-bs-target="#social" type="button" role="tab">
+                <i class="fas fa-share-alt me-2"></i>Social Media Links
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="hours-tab" data-bs-toggle="tab" 
+                    data-bs-target="#hours" type="button" role="tab">
+                <i class="fas fa-clock me-2"></i>Operating Hours
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="contactContent">
+        <!-- Contact Information Tab -->
+        <div class="tab-pane fade show active" id="contact" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Business Contact Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_contact_settings') }}">
+                        <input type="hidden" name="settings_type" value="contact_info">
+                        
+                        <!-- Business Information -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-building me-2"></i>Business Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="business_name" class="form-label">Business Name</label>
+                                    <input type="text" class="form-control" id="business_name" 
+                                           name="business_name" 
+                                           value="{{ contact_settings.business_name }}"
+                                           required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" 
+                                           name="email" 
+                                           value="{{ contact_settings.email }}"
+                                           required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="business_description" class="form-label">Business Description</label>
+                                <textarea class="form-control" id="business_description" 
+                                          name="business_description" rows="3">{{ contact_settings.business_description }}</textarea>
+                                <small class="text-muted">Brief description of your business for footer</small>
+                            </div>
+                        </div>
+
+                        <!-- Phone Information -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-mobile-alt me-2"></i>Phone Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Main Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" 
+                                           name="phone" 
+                                           value="{{ contact_settings.phone }}"
+                                           placeholder="+233 544765278"
+                                           required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone_whatsapp" class="form-label">WhatsApp Number</label>
+                                    <input type="tel" class="form-control" id="phone_whatsapp" 
+                                           name="phone_whatsapp" 
+                                           value="{{ contact_settings.phone_whatsapp or '' }}"
+                                           placeholder="+233 544765278">
+                                    <small class="text-muted">Optional: For customer support via WhatsApp</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Street Address</label>
+                                <input type="text" class="form-control" id="address" 
+                                       name="address" 
+                                       value="{{ contact_settings.address or '' }}"
+                                       placeholder="123 Main Street">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="city" 
+                                           name="city" 
+                                           value="{{ contact_settings.city or '' }}"
+                                           placeholder="Accra">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="country" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="country" 
+                                           name="country" 
+                                           value="{{ contact_settings.country or '' }}"
+                                           placeholder="Ghana">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="postal_code" class="form-label">Postal Code</label>
+                                    <input type="text" class="form-control" id="postal_code" 
+                                           name="postal_code" 
+                                           value="{{ contact_settings.postal_code or '' }}"
+                                           placeholder="00233">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Contact Information
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media Links Tab -->
+        <div class="tab-pane fade" id="social" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-share-alt me-2"></i>Social Media Links
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_contact_settings') }}">
+                        <input type="hidden" name="settings_type" value="social_media">
+                        
+                        <p class="text-muted mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Enter the full URLs to your social media profiles (e.g., https://facebook.com/yourbusiness)
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="facebook_url" class="form-label">
+                                    <i class="fab fa-facebook me-2" style="color: #1877F2;"></i>Facebook
+                                </label>
+                                <input type="url" class="form-control" id="facebook_url" 
+                                       name="facebook_url" 
+                                       value="{{ contact_settings.facebook_url or '' }}"
+                                       placeholder="https://facebook.com/yourbusiness">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="twitter_url" class="form-label">
+                                    <i class="fab fa-twitter me-2" style="color: #1DA1F2;"></i>Twitter/X
+                                </label>
+                                <input type="url" class="form-control" id="twitter_url" 
+                                       name="twitter_url" 
+                                       value="{{ contact_settings.twitter_url or '' }}"
+                                       placeholder="https://twitter.com/yourbusiness">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="instagram_url" class="form-label">
+                                    <i class="fab fa-instagram me-2" style="color: #E4405F;"></i>Instagram
+                                </label>
+                                <input type="url" class="form-control" id="instagram_url" 
+                                       name="instagram_url" 
+                                       value="{{ contact_settings.instagram_url or '' }}"
+                                       placeholder="https://instagram.com/yourbusiness">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="linkedin_url" class="form-label">
+                                    <i class="fab fa-linkedin me-2" style="color: #0A66C2;"></i>LinkedIn
+                                </label>
+                                <input type="url" class="form-control" id="linkedin_url" 
+                                       name="linkedin_url" 
+                                       value="{{ contact_settings.linkedin_url or '' }}"
+                                       placeholder="https://linkedin.com/company/yourbusiness">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="youtube_url" class="form-label">
+                                    <i class="fab fa-youtube me-2" style="color: #FF0000;"></i>YouTube
+                                </label>
+                                <input type="url" class="form-control" id="youtube_url" 
+                                       name="youtube_url" 
+                                       value="{{ contact_settings.youtube_url or '' }}"
+                                       placeholder="https://youtube.com/@yourbusiness">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tiktok_url" class="form-label">
+                                    <i class="fab fa-tiktok me-2" style="color: #000000;"></i>TikTok
+                                </label>
+                                <input type="url" class="form-control" id="tiktok_url" 
+                                       name="tiktok_url" 
+                                       value="{{ contact_settings.tiktok_url or '' }}"
+                                       placeholder="https://tiktok.com/@yourbusiness">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telegram_url" class="form-label">
+                                    <i class="fab fa-telegram me-2" style="color: #0088cc;"></i>Telegram
+                                </label>
+                                <input type="url" class="form-control" id="telegram_url" 
+                                       name="telegram_url" 
+                                       value="{{ contact_settings.telegram_url or '' }}"
+                                       placeholder="https://t.me/yourbusiness">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Social Media Links
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operating Hours Tab -->
+        <div class="tab-pane fade" id="hours" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Business Operating Hours
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_contact_settings') }}">
+                        <input type="hidden" name="settings_type" value="operating_hours">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="opening_time" class="form-label">Opening Time</label>
+                                <input type="time" class="form-control" id="opening_time" 
+                                       name="opening_time" 
+                                       value="{{ contact_settings.opening_time }}"
+                                       required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="closing_time" class="form-label">Closing Time</label>
+                                <input type="time" class="form-control" id="closing_time" 
+                                       name="closing_time" 
+                                       value="{{ contact_settings.closing_time }}"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="timezone" class="form-label">Timezone</label>
+                            <select class="form-control" id="timezone" name="timezone" required>
+                                <option value="Africa/Accra" {% if contact_settings.timezone == 'Africa/Accra' %}selected{% endif %}>Africa/Accra (Ghana)</option>
+                                <option value="Africa/Lagos" {% if contact_settings.timezone == 'Africa/Lagos' %}selected{% endif %}>Africa/Lagos (Nigeria)</option>
+                                <option value="UTC" {% if contact_settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                                <option value="Europe/London" {% if contact_settings.timezone == 'Europe/London' %}selected{% endif %}>Europe/London</option>
+                                <option value="America/New_York" {% if contact_settings.timezone == 'America/New_York' %}selected{% endif %}>America/New_York</option>
+                                <option value="America/Los_Angeles" {% if contact_settings.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los_Angeles</option>
+                                <option value="Asia/Dubai" {% if contact_settings.timezone == 'Asia/Dubai' %}selected{% endif %}>Asia/Dubai</option>
+                                <option value="Asia/Singapore" {% if contact_settings.timezone == 'Asia/Singapore' %}selected{% endif %}>Asia/Singapore</option>
+                                <option value="Asia/Tokyo" {% if contact_settings.timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Current Time Format:</strong> 
+                            <span id="timeDisplay">{{ contact_settings.opening_time }} - {{ contact_settings.closing_time }}</span>
+                            (<span id="tzDisplay">{{ contact_settings.timezone }}</span>)
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Operating Hours
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Card -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-eye me-2"></i>Footer Preview
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>{{ contact_settings.business_name }}</h6>
+                    <p class="small text-muted">{{ contact_settings.business_description }}</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-decoration-none">Home</a></li>
+                        <li><a href="#" class="text-decoration-none">Products</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>Contact</h6>
+                    <p class="small">
+                        <i class="fas fa-envelope me-2"></i>{{ contact_settings.email }}<br>
+                        <i class="fas fa-phone me-2"></i>{{ contact_settings.phone }}<br>
+                        {% if contact_settings.phone_whatsapp %}
+                        <i class="fab fa-whatsapp me-2"></i>{{ contact_settings.phone_whatsapp }}
+                        {% endif %}
+                    </p>
+                    {% if contact_settings.get_active_social_links() %}
+                    <div class="mt-2">
+                        {% if contact_settings.facebook_url %}
+                        <a href="{{ contact_settings.facebook_url }}" target="_blank" class="me-2">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.twitter_url %}
+                        <a href="{{ contact_settings.twitter_url }}" target="_blank" class="me-2">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.instagram_url %}
+                        <a href="{{ contact_settings.instagram_url }}" target="_blank" class="me-2">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        {% endif %}
+                        {% if contact_settings.youtube_url %}
+                        <a href="{{ contact_settings.youtube_url }}" target="_blank" class="me-2">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update time display
+document.getElementById('opening_time').addEventListener('change', updateTimeDisplay);
+document.getElementById('closing_time').addEventListener('change', updateTimeDisplay);
+document.getElementById('timezone').addEventListener('change', updateTimeDisplay);
+
+function updateTimeDisplay() {
+    const opening = document.getElementById('opening_time').value;
+    const closing = document.getElementById('closing_time').value;
+    const tz = document.getElementById('timezone').value;
+    document.getElementById('timeDisplay').textContent = opening + ' - ' + closing;
+    document.getElementById('tzDisplay').textContent = tz;
+}
+</script>
+{% endblock %}

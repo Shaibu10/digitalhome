@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-2">Verify Your Account</h2>
+                    <p class="text-center text-muted mb-4">
+                        <small>Option 1: Enter the code sent to your email or SMS</small>
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('auth.verify_code') }}">
+                        <div class="mb-3">
+                            <label for="verification_code" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control form-control-lg text-center" 
+                                   id="verification_code" name="verification_code" 
+                                   placeholder="Enter 6-character code" maxlength="6" 
+                                   pattern="[A-Z0-9]{6}" required
+                                   style="letter-spacing: 0.5em; font-size: 1.5em; font-weight: bold;">
+                            <small class="form-text text-muted">Check your email or SMS for the 6-character code (e.g., ABC123)</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Verify Account</button>
+                    </form>
+                    
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> You can verify using the code sent to either your email or phone number. Whichever arrives first!
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Didn't receive a code?</p>
+                        {% if pending_email %}
+                            <a href="{{ url_for('auth.resend_verification', email=pending_email) }}" class="link-primary">Resend verification code</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="link-primary">Back to login</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}

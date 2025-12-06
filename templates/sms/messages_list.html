@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Messages{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="h2 mb-4">
+        <i class="fas fa-list me-2"></i> SMS Message History
+    </h1>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <select class="form-select" name="status">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                        <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-filter me-2"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Phone</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Sent</th>
+                        <th>Campaign</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if messages.items %}
+                        {% for msg in messages.items %}
+                        <tr>
+                            <td>{{ msg.recipient_name }}</td>
+                            <td>{{ msg.phone_number }}</td>
+                            <td>
+                                <small>{{ msg.content[:50] }}{% if msg.content|length > 50 %}...{% endif %}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ msg.get_status_badge() }}">{{ msg.status }}</span>
+                            </td>
+                            <td>
+                                {% if msg.sent_at %}
+                                    {{ msg.sent_at.strftime('%d/%m/%Y %H:%M') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if msg.campaign %}
+                                    <a href="{{ url_for('sms.view_campaign', campaign_id=msg.campaign.id) }}">
+                                        {{ msg.campaign.name[:20] }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Single</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No messages found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if messages.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if messages.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.messages_list', page=messages.prev_num, status=status_filter) }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in messages.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == messages.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sms.messages_list', page=page_num, status=status_filter) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if messages.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.messages_list', page=messages.next_num, status=status_filter) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

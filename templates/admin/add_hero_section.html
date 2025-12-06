@@ -1,0 +1,221 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Add Hero Section{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Add New Hero Section</h1>
+    <a href="{{ url_for('admin_hero_sections') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Hero Sections
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" required 
+                               placeholder="e.g., Summer Sale - Up to 50% Off">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subtitle" class="form-label">Subtitle</label>
+                        <textarea class="form-control" id="subtitle" name="subtitle" rows="3"
+                                  placeholder="e.g., Shop the hottest trends this season. Limited time offer!"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="button_text" class="form-label">Button Text</label>
+                                <input type="text" class="form-control" id="button_text" name="button_text" 
+                                       value="Shop Now" placeholder="e.g., Shop Now, Learn More">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="button_url" class="form-label">Button URL</label>
+                                <input type="text" class="form-control" id="button_url" name="button_url" 
+                                       value="/products" placeholder="e.g., /products, /categories/1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Hero Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">Recommended: 1200x600 pixels, JPG/PNG format</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="background_color" class="form-label">Background Color</label>
+                                <select class="form-select" id="background_color" name="background_color">
+                                    <option value="bg-primary">Blue (Primary)</option>
+                                    <option value="bg-success">Green (Success)</option>
+                                    <option value="bg-warning">Yellow (Warning)</option>
+                                    <option value="bg-danger">Red (Danger)</option>
+                                    <option value="bg-dark">Dark</option>
+                                    <option value="bg-light">Light</option>
+                                    <option value="bg-gradient">Gradient</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="text_color" class="form-label">Text Color</label>
+                                <select class="form-select" id="text_color" name="text_color">
+                                    <option value="text-white">White</option>
+                                    <option value="text-dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="display_order" class="form-label">Display Order</label>
+                                <input type="number" class="form-control" id="display_order" name="display_order" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active">
+                                    <label class="form-check-label" for="is_active">
+                                        Set as Active
+                                    </label>
+                                </div>
+                                <div class="form-text">Only one hero section can be active at a time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Hero Section
+                </button>
+                <a href="{{ url_for('admin_hero_sections') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Preview Section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Live Preview</h5>
+    </div>
+    <div class="card-body">
+        <div class="preview-container border rounded p-4">
+            <p class="text-muted">Preview will appear here as you type...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const preview = document.querySelector('.preview-container');
+    const imageInput = document.getElementById('image');
+    
+    function updatePreview() {
+        const title = document.getElementById('title').value || 'Hero Title';
+        const subtitle = document.getElementById('subtitle').value || 'Hero subtitle text goes here...';
+        const buttonText = document.getElementById('button_text').value || 'Shop Now';
+        const bgColor = document.getElementById('background_color').value;
+        const textColor = document.getElementById('text_color').value;
+        
+        let bgStyle = '';
+        if (bgColor === 'bg-gradient') {
+            bgStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+        }
+        
+        // Check if an image file is selected
+        let imagePreview = '';
+        if (imageInput.files && imageInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.querySelector('.preview-image').innerHTML = `
+                    <img src="${e.target.result}" 
+                         alt="Preview" 
+                         style="max-height: 150px; object-fit: cover;"
+                         class="img-fluid rounded">
+                `;
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+            imagePreview = `
+                <div class="col-md-6 text-center preview-image">
+                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                         style="height: 150px; opacity: 0.5;">
+                        <i class="fas fa-image fa-2x ${textColor}"></i>
+                    </div>
+                </div>
+            `;
+        } else {
+            imagePreview = `
+                <div class="col-md-6 text-center preview-image">
+                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                         style="height: 150px; opacity: 0.5;">
+                        <i class="fas fa-image fa-2x ${textColor}"></i>
+                    </div>
+                </div>
+            `;
+        }
+        
+        preview.innerHTML = `
+            <div class="p-4 rounded" style="${bgStyle}" class="${bgColor !== 'bg-gradient' ? bgColor : ''} ${textColor}">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3>${title}</h3>
+                        <p class="mb-3">${subtitle}</p>
+                        <button class="btn ${textColor === 'text-dark' ? 'btn-dark' : 'btn-light'}">${buttonText}</button>
+                    </div>
+                    ${imagePreview}
+                </div>
+                <div class="mt-2 small text-muted">
+                    Background: ${bgColor}, Text: ${textColor}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Update preview on any input change
+    form.addEventListener('input', updatePreview);
+    form.addEventListener('change', updatePreview);
+    
+    // Handle image file selection specifically
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImage = preview.querySelector('.preview-image');
+                if (previewImage) {
+                    previewImage.innerHTML = `
+                        <img src="${e.target.result}" 
+                             alt="Preview" 
+                             style="max-height: 150px; object-fit: cover;"
+                             class="img-fluid rounded">
+                    `;
+                }
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+        updatePreview();
+    });
+    
+    // Initial preview
+    updatePreview();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% if dynamic_messages %}
+<section class="dynamic-messages-container">
+    <div class="container">
+        {% for message in dynamic_messages %}
+        <div class="dynamic-message" style="background-color: {{ message.background_color }}; color: {{ message.text_color }};" 
+             data-message-id="{{ message.id }}" onload="incrementViewCount({{ message.id }})">
+            
+            <div class="dynamic-message-icon">
+                <i class="fas fa-{{ message.icon }}"></i>
+            </div>
+            
+            <div class="dynamic-message-content">
+                <h4 class="dynamic-message-title">{{ message.title }}</h4>
+                <div class="dynamic-message-body">
+                    {{ message.content | safe }}
+                </div>
+                
+                {% if message.cta_text and message.cta_url %}
+                <a href="{{ message.cta_url }}" class="dynamic-message-cta" 
+                   style="background-color: {{ message.text_color }}; color: {{ message.background_color }};"
+                   onclick="trackMessageClick({{ message.id }})">
+                    {{ message.cta_text }}
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+function incrementViewCount(messageId) {
+    // Track message view (optional - you could use a library like Intersection Observer)
+    fetch(`/api/messages/view/${messageId}`, { method: 'GET' }).catch(e => console.log('View tracking skipped'));
+}
+
+function trackMessageClick(messageId) {
+    // Track CTA click
+    fetch(`/api/messages/click/${messageId}`, { method: 'GET' }).catch(e => console.log('Click tracking skipped'));
+}
+
+// Use Intersection Observer to track when message becomes visible
+if (document.querySelectorAll('.dynamic-message').length > 0) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const messageId = entry.target.dataset.messageId;
+                if (messageId) {
+                    incrementViewCount(messageId);
+                    observer.unobserve(entry.target);
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    document.querySelectorAll('.dynamic-message').forEach(msg => observer.observe(msg));
+}
+</script>
+{% endif %}

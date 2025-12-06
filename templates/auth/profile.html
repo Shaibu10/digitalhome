@@ -1,0 +1,628 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Profile Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-circle"></i> Profile
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="avatar bg-light rounded-circle" style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <i class="fas fa-user fa-4x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h3>{{ current_user.username }}</h3>
+                            <p class="text-muted mb-3">
+                                <i class="fas fa-calendar-alt"></i> Member since {{ current_user.created_at.strftime('%B %Y') }}
+                            </p>
+
+                            <!-- Email Verification Status -->
+                            <div class="alert {% if current_user.is_verified %}alert-success{% else %}alert-warning{% endif %}">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        {% if current_user.is_verified %}
+                                        <i class="fas fa-check-circle"></i>
+                                        <strong>Email Verified</strong>
+                                        <br>
+                                        <small>Verified on {% if current_user.verified_at %}{{ current_user.verified_at.strftime('%B %d, %Y at %H:%M') }}{% else %}Unknown{% endif %}</small>
+                                        {% else %}
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <strong>Email Not Yet Verified</strong>
+                                        <br>
+                                        <small>Please verify your email address to unlock all features</small>
+                                        {% endif %}
+                                    </div>
+                                    {% if not current_user.is_verified %}
+                                    <div>
+                                        <form action="{{ url_for('auth.resend_verification', email=current_user.email) }}" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-envelope"></i> Resend Verification Email
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Details -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Account Details
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">First Name</label>
+                            <p class="h6">{{ current_user.first_name or 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Last Name</label>
+                            <p class="h6">{{ current_user.last_name or 'Not provided' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Email Address</label>
+                            <p class="h6">{{ current_user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Username</label>
+                            <p class="h6">{{ current_user.username }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Address</label>
+                            <p class="h6">{{ current_user.address or 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">City</label>
+                            <p class="h6">{{ current_user.city or 'Not provided' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Postal Code</label>
+                            <p class="h6">{{ current_user.postal_code or 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Phone Number</label>
+                            <p class="h6">{{ current_user.phone_number or 'Not provided' }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Account Status</label>
+                            <p>
+                                {% if current_user.is_active %}
+                                <span class="badge badge-success"><i class="fas fa-check"></i> Active</span>
+                                {% else %}
+                                <span class="badge badge-danger"><i class="fas fa-ban"></i> Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Email Verification</label>
+                            <p>
+                                {% if current_user.is_verified %}
+                                <span class="badge badge-success"><i class="fas fa-check-circle"></i> Verified</span>
+                                {% else %}
+                                <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted\">Member Since</label>
+                            <p class="h6">{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="text-muted">Last Login</label>
+                            <p class="h6">
+                                {% if current_user.last_login %}
+                                {{ current_user.last_login.strftime('%B %d, %Y at %H:%M') }}
+                                {% else %}
+                                <span class="text-muted">Never</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Statistics -->
+            {% if current_user.get_order_count() > 0 or current_user.get_total_spent() > 0 %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Account Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-box text-center p-3 bg-light rounded">
+                                <h3>{{ current_user.get_order_count() }}</h3>
+                                <p class="text-muted">Total Orders</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box text-center p-3 bg-light rounded">
+                                <h3>${{ "%.2f"|format(current_user.get_total_spent()) }}</h3>
+                                <p class="text-muted">Total Spent</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity -->
+            {% if current_user.get_recent_activities(5) %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for activity in current_user.get_recent_activities(5) %}
+                        <div class="timeline-item mb-3 pb-3 border-bottom">
+                            <div class="d-flex">
+                                <div class="timeline-marker">
+                                    <i class="fas fa-{% if activity.activity_type == 'login' %}sign-in-alt{% elif activity.activity_type == 'logout' %}sign-out-alt{% elif activity.activity_type == 'email_verified' %}envelope{% elif activity.activity_type == 'registration' %}user-plus{% else %}history{% endif %} text-primary"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <h6 class="mb-1">
+                                        {% if activity.activity_type == 'login' %}
+                                        Logged in
+                                        {% elif activity.activity_type == 'logout' %}
+                                        Logged out
+                                        {% elif activity.activity_type == 'email_verified' %}
+                                        Verified email
+                                        {% elif activity.activity_type == 'registration' %}
+                                        Registered account
+                                        {% elif activity.activity_type == 'add_to_cart' %}
+                                        Added item to cart
+                                        {% else %}
+                                        {{ activity.activity_type.replace('_', ' ').title() }}
+                                        {% endif %}
+                                    </h6>
+                                    {% if activity.description %}
+                                    <p class="text-muted small mb-1">{{ activity.description }}</p>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        {{ activity.created_at.strftime('%B %d, %Y at %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Security Box -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lock"></i> Security
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted d-block mb-2">Password</label>
+                        <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </div>
+                    <div>
+                        <label class="text-muted d-block mb-2">Email Address</label>
+                        <button type="button" class="btn btn-outline-primary btn-block" data-bs-toggle="modal" data-bs-target="#changeEmailModal">
+                            <i class="fas fa-envelope"></i> Change Email
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Info Box -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Verification Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="verification-item mb-3 pb-3 border-bottom">
+                        <div class="d-flex align-items-center">
+                            {% if current_user.is_verified %}
+                            <i class="fas fa-check-circle text-success fa-2x mr-3"></i>
+                            <div>
+                                <strong>Email Verified</strong>
+                                <br>
+                                <small class="text-muted">{% if current_user.verified_at %}{{ current_user.verified_at.strftime('%b %d, %Y') }}{% else %}Unknown{% endif %}</small>
+                            </div>
+                            {% else %}
+                            <i class="fas fa-exclamation-circle text-warning fa-2x mr-3"></i>
+                            <div>
+                                <strong>Email Pending</strong>
+                                <br>
+                                <small class="text-muted">Awaiting verification</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="verification-item">
+                        <div class="d-flex align-items-center">
+                            {% if current_user.is_active %}
+                            <i class="fas fa-check-circle text-success fa-2x mr-3"></i>
+                            {% else %}
+                            <i class="fas fa-ban text-danger fa-2x mr-3"></i>
+                            {% endif %}
+                            <div>
+                                <strong>Account Status</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {% if current_user.is_active %}Active{% else %}Inactive{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye"></i> Quick Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="stat-row d-flex justify-content-between mb-2">
+                        <span>Account Age:</span>
+                        <strong>
+                            {% set days = (now - current_user.created_at).days %}
+                            {% if days == 0 %}
+                            Today
+                            {% elif days == 1 %}
+                            1 day
+                            {% else %}
+                            {{ days }} days
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="stat-row d-flex justify-content-between mb-2">
+                        <span>Orders:</span>
+                        <strong>{{ current_user.get_order_count() }}</strong>
+                    </div>
+                    <div class="stat-row d-flex justify-content-between">
+                        <span>Activities:</span>
+                        <strong>{{ current_user.get_activity_count() }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordLabel">
+                    <i class="fas fa-key"></i> Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="modal-body">
+                    <div id="passwordMessage"></div>
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                        <small class="form-text text-muted">At least 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Email Modal -->
+<div class="modal fade" id="changeEmailModal" tabindex="-1" role="dialog" aria-labelledby="changeEmailLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeEmailLabel">
+                    <i class="fas fa-envelope"></i> Change Email Address
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="currentEmail">Current Email</label>
+                        <input type="email" class="form-control" id="currentEmail" value="{{ current_user.email }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="newEmail">New Email Address</label>
+                        <input type="email" class="form-control" id="newEmail" required>
+                    </div>
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle"></i> You'll need to verify your new email address.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Change Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="editProfileLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileLabel">
+                    <i class="fas fa-user-edit"></i> Edit Profile
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editProfileForm">
+                <div class="modal-body">
+                    <div id="profileMessage"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="firstName">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="first_name" value="{{ current_user.first_name or '' }}" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="last_name" value="{{ current_user.last_name or '' }}" maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="address">Address</label>
+                        <input type="text" class="form-control" id="address" name="address" value="{{ current_user.address or '' }}" maxlength="255">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="city">City</label>
+                                <input type="text" class="form-control" id="city" name="city" value="{{ current_user.city or '' }}" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="postalCode">Postal Code</label>
+                                <input type="text" class="form-control" id="postalCode" name="postal_code" value="{{ current_user.postal_code or '' }}" maxlength="20">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" class="form-control" id="phoneNumber" name="phone_number" value="{{ current_user.phone_number or '' }}" maxlength="20" placeholder="e.g., 0241234567">
+                        <small class="form-text text-muted">Ghana phone format: 024XXXXXXX</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+    }
+
+    .timeline-item {
+        display: flex;
+        position: relative;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        background-color: #f0f0f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+
+    .avatar {
+        border: 3px solid #f0f0f0;
+    }
+
+    .verification-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .stat-row {
+        padding: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle change password form submission
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const currentPassword = formData.get('current_password');
+                const newPassword = formData.get('new_password');
+                const confirmPassword = formData.get('confirm_password');
+                
+                // Clear previous message
+                const messageDiv = document.getElementById('passwordMessage');
+                messageDiv.innerHTML = '';
+                
+                // Client-side validation
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    showPasswordMessage('All fields are required', 'danger');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    showPasswordMessage('New passwords do not match', 'danger');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    showPasswordMessage('Password must be at least 6 characters long', 'danger');
+                    return;
+                }
+                
+                // Submit to server
+                fetch('{{ url_for("auth.change_password") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showPasswordMessage(data.message, 'success');
+                        // Clear form
+                        changePasswordForm.reset();
+                        // Close modal after 1.5 seconds
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }, 1500);
+                    } else {
+                        showPasswordMessage(data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showPasswordMessage('An error occurred. Please try again.', 'danger');
+                });
+            });
+        }
+    });
+    
+    function showPasswordMessage(message, type) {
+        const messageDiv = document.getElementById('passwordMessage');
+        messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+    }
+
+    // Handle edit profile form submission
+    const editProfileForm = document.getElementById('editProfileForm');
+    if (editProfileForm) {
+        editProfileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Clear previous message
+            const messageDiv = document.getElementById('profileMessage');
+            messageDiv.innerHTML = '';
+            
+            // Submit to server
+            fetch('{{ url_for("auth.update_profile") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(Object.fromEntries(formData))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showProfileMessage(data.message, 'success');
+                    // Reload page after 1.5 seconds to show updated profile
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showProfileMessage(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showProfileMessage('An error occurred. Please try again.', 'danger');
+            });
+        });
+    }
+    
+    function showProfileMessage(message, type) {
+        const messageDiv = document.getElementById('profileMessage');
+        messageDiv.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+    }
+</script>
+{% endblock %}

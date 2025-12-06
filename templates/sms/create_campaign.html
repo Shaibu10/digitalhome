@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Create SMS Campaign{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-broadcast-tower me-2"></i> Create Bulk SMS Campaign
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="campaign_name" class="form-label">Campaign Name</label>
+                            <input type="text" class="form-control" id="campaign_name" name="campaign_name" 
+                                   placeholder="e.g., Black Friday Promotion" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="recipient_filter" class="form-label">Target Recipients</label>
+                            <select class="form-select" id="recipient_filter" name="recipient_filter" 
+                                    onchange="updateFilterOptions()" required>
+                                <option value="all_users">All Active Users</option>
+                                <option value="verified_only">Verified Users Only</option>
+                                <option value="by_city">Filter by City</option>
+                                <option value="by_date_range">Filter by Registration Date</option>
+                                <option value="custom_list">Custom User List</option>
+                            </select>
+                            <small class="form-text text-muted">Select who should receive this campaign</small>
+                        </div>
+
+                        <!-- City Filter -->
+                        <div id="city-filter" class="mb-3" style="display: none;">
+                            <label for="city" class="form-label">Select City</label>
+                            <select class="form-select" id="city" name="city">
+                                <option value="">-- Select City --</option>
+                                {% for city in cities %}
+                                <option value="{{ city }}">{{ city }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Date Range Filter -->
+                        <div id="date-filter" class="mb-3" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="start_date" class="form-label">From Date</label>
+                                    <input type="datetime-local" class="form-control" id="start_date" name="start_date">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="end_date" class="form-label">To Date</label>
+                                    <input type="datetime-local" class="form-control" id="end_date" name="end_date">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Message Content</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="use_template" name="message_type" 
+                                       value="template" checked onchange="toggleMessageInput()">
+                                <label class="form-check-label" for="use_template">
+                                    Use Template
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="use_custom" name="message_type" 
+                                       value="custom" onchange="toggleMessageInput()">
+                                <label class="form-check-label" for="use_custom">
+                                    Custom Message
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Template Selection -->
+                        <div id="template-section" class="mb-3">
+                            <label for="template_id" class="form-label">Select Template</label>
+                            <select class="form-select" id="template_id" name="template_id">
+                                <option value="">-- Select a template --</option>
+                                {% for template in templates %}
+                                <option value="{{ template.id }}">{{ template.name }} ({{ template.category }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Custom Message -->
+                        <div id="custom-section" class="mb-3" style="display: none;">
+                            <label for="custom_message" class="form-label">Message</label>
+                            <textarea class="form-control" id="custom_message" name="custom_message" rows="4" 
+                                      placeholder="Enter your message (max 500 chars)..." maxlength="500" 
+                                      onkeyup="updateCharCount()"></textarea>
+                            <small class="form-text text-muted">
+                                Characters: <span id="msg_char_count">0</span>/500 
+                                <span id="msg_sms_parts" class="badge bg-info ms-2">1 SMS</span>
+                            </small>
+                        </div>
+
+                        <!-- Scheduling -->
+                        <div class="mb-3">
+                            <label for="schedule_time" class="form-label">Schedule (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="schedule_time" name="schedule_time">
+                            <small class="form-text text-muted">Leave empty to send immediately</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="alert alert-warning">
+                                <strong><i class="fas fa-exclamation-triangle me-2"></i>Note:</strong>
+                                Bulk campaigns require admin confirmation before sending.
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i> Create Campaign
+                            </button>
+                            <a href="{{ url_for('sms.campaigns') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateFilterOptions() {
+    const filter = document.getElementById('recipient_filter').value;
+    document.getElementById('city-filter').style.display = (filter === 'by_city') ? 'block' : 'none';
+    document.getElementById('date-filter').style.display = (filter === 'by_date_range') ? 'block' : 'none';
+}
+
+function toggleMessageInput() {
+    const useTemplate = document.getElementById('use_template').checked;
+    document.getElementById('template-section').style.display = useTemplate ? 'block' : 'none';
+    document.getElementById('custom-section').style.display = useTemplate ? 'none' : 'block';
+}
+
+function updateCharCount() {
+    const message = document.getElementById('custom_message');
+    const length = message.value.length;
+    document.getElementById('msg_char_count').textContent = length;
+    
+    let parts = 1;
+    if (length > 160) {
+        parts = Math.ceil((length - 160) / 153) + 1;
+    }
+    document.getElementById('msg_sms_parts').textContent = parts + ' SMS';
+}
+</script>
+{% endblock %}

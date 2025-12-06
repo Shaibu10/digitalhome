@@ -1,0 +1,139 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Add Product{% endblock %}
+
+{% block content %}
+
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <h1 class="h2 mb-4">Add New Product</h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="category_id" class="form-label">Category</label>
+                                    <select class="form-control" id="category_id" name="category_id" required>
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price (GH₵)</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="discount_price" class="form-label">Discount Amount (GH₵) <span class="text-muted">(amount to deduct from price)</span></label>
+                                    <input type="number" step="0.01" class="form-control" id="discount_price" name="discount_price">
+                                    <small id="discountInfo" class="form-text text-muted"></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="stock_quantity" class="form-label">Stock Quantity</label>
+                                    <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Product Image *</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*" required onchange="previewImage(this)">
+                                    <div class="form-text">Supported formats: JPG, PNG, GIF. Max size: 16MB</div>
+                                    <div id="imagePreview" class="mt-2"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+                                        <label class="form-check-label" for="is_featured">
+                                            Featured Product
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Featured products will be highlighted on the homepage</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active">
+                                        <label class="form-check-label" for="is_active">
+                                            Active Product
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Inactive products won't be visible to customers</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                        <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.maxWidth = '200px';
+            img.style.maxHeight = '200px';
+            img.className = 'img-thumbnail';
+            preview.appendChild(img);
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Calculate and display discount percentage in real-time
+document.getElementById('price').addEventListener('change', updateDiscountInfo);
+document.getElementById('discount_price').addEventListener('input', updateDiscountInfo);
+
+function updateDiscountInfo() {
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const discountAmount = parseFloat(document.getElementById('discount_price').value) || 0;
+    const infoEl = document.getElementById('discountInfo');
+    
+    if (discountAmount === 0) {
+        infoEl.innerHTML = '';
+        return;
+    }
+    
+    if (discountAmount >= price && price > 0) {
+        infoEl.innerHTML = '<span class="text-danger">✗ Discount amount must be less than price!</span>';
+        infoEl.style.display = 'block';
+    } else if (discountAmount > 0 && price > 0) {
+        const finalPrice = price - discountAmount;
+        const discountPercent = Math.round((discountAmount / price) * 100);
+        infoEl.innerHTML = `<span class="text-success">✓ Customer pays GH₵ ${finalPrice.toFixed(2)} (Save GH₵ ${discountAmount.toFixed(2)}, ${discountPercent}% off)</span>`;
+        infoEl.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

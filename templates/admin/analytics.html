@@ -1,0 +1,570 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-1">
+                <i class="fas fa-chart-line me-2"></i>Analytics Dashboard
+            </h1>
+            <p class="text-muted">Comprehensive sales and customer analytics</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('admin_analytics', time_period=7) }}" class="btn btn-outline-primary {% if analytics.time_period == 7 %}active{% endif %}">
+                    7 Days
+                </a>
+                <a href="{{ url_for('admin_analytics', time_period=30) }}" class="btn btn-outline-primary {% if analytics.time_period == 30 %}active{% endif %}">
+                    30 Days
+                </a>
+                <a href="{{ url_for('admin_analytics', time_period=90) }}" class="btn btn-outline-primary {% if analytics.time_period == 90 %}active{% endif %}">
+                    90 Days
+                </a>
+                <a href="{{ url_for('admin_analytics', time_period=365) }}" class="btn btn-outline-primary {% if analytics.time_period == 365 %}active{% endif %}">
+                    1 Year
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Trends Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trending-up me-2"></i>Paid Sales Trends (Last {{ analytics.time_period }} Days)
+                        <small class="float-end" style="font-size: 0.75rem;">Revenue from paid, non-cancelled orders only</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesTrendsChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>Paid Monthly Revenue & Orders (Last 12 Months)
+                        <small class="float-end" style="font-size: 0.75rem;">Based on paid, non-cancelled orders</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendsChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products & Categories Row -->
+    <div class="row mb-4">
+        <!-- Top Products by Revenue -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-crown me-2"></i>Top 10 Products by Paid Revenue
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <small class="text-muted d-block mb-2">Based on paid, non-cancelled orders</small>
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Units</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in analytics.top_products %}
+                            <tr>
+                                <td>
+                                    <small class="d-block">{{ item.product.name }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.units_sold }}</span>
+                                </td>
+                                <td class="text-success fw-bold">
+                                    GH₵ {{ "%.2f"|format(item.total_revenue) }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No paid sales data yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Categories by Revenue -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Top 10 Categories by Paid Revenue
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <small class="text-muted d-block mb-2">Based on paid, non-cancelled orders</small>
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Units</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in analytics.top_categories %}
+                            <tr>
+                                <td>
+                                    <small>{{ item.category.name }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.units_sold }}</span>
+                                </td>
+                                <td class="text-success fw-bold">
+                                    GH₵ {{ "%.2f"|format(item.revenue) }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No paid sales data yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Demographics Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Customer Demographics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-value text-primary">{{ analytics.customer_demographics.total_users }}</div>
+                                <div class="stat-label">Total Users</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-value text-success">{{ analytics.customer_demographics.active_users }}</div>
+                                <div class="stat-label">Active Users</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-box">
+                                <div class="stat-value text-info">{{ analytics.customer_demographics.verified_users }}</div>
+                                <div class="stat-label">Verified Users</div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="userStatusChart" style="max-height: 250px;"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mt-3">
+                                <div class="mb-3">
+                                    <strong>Users with Orders:</strong>
+                                    <span class="badge bg-success float-end">
+                                        {{ analytics.customer_demographics.users_with_orders }}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Users without Orders:</strong>
+                                    <span class="badge bg-warning float-end">
+                                        {{ analytics.customer_demographics.users_without_orders }}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Avg Orders per Customer:</strong>
+                                    <span class="badge bg-info float-end">
+                                        {{ analytics.customer_demographics.avg_orders_per_customer }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Funnel Section -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-funnel me-2"></i>Paid Conversion Funnel
+                    </h5>
+                    <small class="text-white-50">Based on paid, non-cancelled orders</small>
+                </div>
+                <div class="card-body">
+                    <div class="funnel-container">
+                        <div class="funnel-stage" data-stage="1">
+                            <div class="funnel-label">
+                                <strong>Total Users</strong>
+                                <span class="float-end">{{ analytics.conversion_funnel.stages.total_users }}</span>
+                            </div>
+                            <div class="funnel-bar" style="width: 100%; background: #3498db;"></div>
+                        </div>
+                        <div class="funnel-stage" data-stage="2">
+                            <div class="funnel-label">
+                                <strong>Viewed Products</strong>
+                                <span class="float-end">{{ analytics.conversion_funnel.stages.viewed_products }}</span>
+                            </div>
+                            <div class="funnel-bar" style="width: 90%; background: #2ecc71;"></div>
+                        </div>
+                        <div class="funnel-stage" data-stage="3">
+                            <div class="funnel-label">
+                                <strong>Added to Cart</strong>
+                                <span class="float-end">{{ analytics.conversion_funnel.stages.added_to_cart }}</span>
+                            </div>
+                            <div class="funnel-bar" style="width: 75%; background: #f39c12;"></div>
+                        </div>
+                        <div class="funnel-stage" data-stage="4">
+                            <div class="funnel-label">
+                                <strong>Completed Order</strong>
+                                <span class="float-end">{{ analytics.conversion_funnel.stages.completed_order }}</span>
+                            </div>
+                            <div class="funnel-bar" style="width: 50%; background: #e74c3c;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Rates -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-purple text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-percentage me-2"></i>Paid Conversion Rates
+                    </h5>
+                    <small class="text-white-50">Based on paid, non-cancelled orders</small>
+                </div>
+                <div class="card-body">
+                    <div class="conversion-rate-box">
+                        <div class="rate-item">
+                            <div class="rate-label">View to Cart</div>
+                            <div class="rate-value text-info">
+                                {{ analytics.conversion_funnel.conversion_rates.view_to_cart }}%
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-info" style="width: {{ analytics.conversion_funnel.conversion_rates.view_to_cart }}%"></div>
+                            </div>
+                        </div>
+                        <div class="rate-item mt-3">
+                            <div class="rate-label">Cart to Order</div>
+                            <div class="rate-value text-warning">
+                                {{ analytics.conversion_funnel.conversion_rates.cart_to_order }}%
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-warning" style="width: {{ analytics.conversion_funnel.conversion_rates.cart_to_order }}%"></div>
+                            </div>
+                        </div>
+                        <div class="rate-item mt-3">
+                            <div class="rate-label">Overall Conversion</div>
+                            <div class="rate-value text-success">
+                                {{ analytics.conversion_funnel.conversion_rates.overall_conversion }}%
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: {{ analytics.conversion_funnel.conversion_rates.overall_conversion }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Status Breakdown -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box me-2"></i>Paid Order Status Breakdown
+                    </h5>
+                    <small class="text-white-50">Breakdown of paid, non-cancelled orders</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="orderStatusChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-teal text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-check me-2"></i>Order Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% set total_orders = analytics.order_status_breakdown.values()|sum %}
+                    {% for status, count in analytics.order_status_breakdown.items() %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ status|title }}</strong>
+                            <span class="badge bg-primary">{{ count }}</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" style="width: {{ (count / total_orders * 100) if total_orders > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .stat-box {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+
+    .funnel-stage {
+        margin-bottom: 15px;
+    }
+
+    .funnel-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+
+    .funnel-bar {
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+        color: white;
+        font-weight: bold;
+    }
+
+    .conversion-rate-box {
+        padding: 20px;
+    }
+
+    .rate-item {
+        margin-bottom: 20px;
+    }
+
+    .rate-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .rate-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .bg-purple {
+        background-color: #9b59b6 !important;
+    }
+
+    .bg-teal {
+        background-color: #1abc9c !important;
+    }
+
+    .card-header {
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<script>
+    // Sales Trends Chart
+    const salesCtx = document.getElementById('salesTrendsChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ analytics.sales_trends.dates | tojson }},
+            datasets: [
+                {
+                    label: 'Revenue (GH₵)',
+                    data: {{ analytics.sales_trends.revenue | tojson }},
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#3498db',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'Orders',
+                    data: {{ analytics.sales_trends.orders | tojson }},
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#2ecc71',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: 'Revenue (GH₵)' }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'Orders' },
+                    grid: { drawOnChartArea: false }
+                }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' }
+            }
+        }
+    });
+
+    // Monthly Trends Chart
+    const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ analytics.monthly_trends.months | tojson }},
+            datasets: [
+                {
+                    label: 'Revenue (GH₵)',
+                    data: {{ analytics.monthly_trends.revenue | tojson }},
+                    backgroundColor: '#3498db',
+                    borderColor: '#2980b9',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Orders',
+                    data: {{ analytics.monthly_trends.orders | tojson }},
+                    backgroundColor: '#2ecc71',
+                    borderColor: '#27ae60',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: {
+                legend: { display: true, position: 'top' }
+            }
+        }
+    });
+
+    // User Status Chart
+    const userStatusCtx = document.getElementById('userStatusChart').getContext('2d');
+    new Chart(userStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Inactive', 'Verified', 'Unverified'],
+            datasets: [{
+                data: [
+                    {{ analytics.customer_demographics.active_users }},
+                    {{ analytics.customer_demographics.total_users - analytics.customer_demographics.active_users }},
+                    {{ analytics.customer_demographics.verified_users }},
+                    {{ analytics.customer_demographics.total_users - analytics.customer_demographics.verified_users }}
+                ],
+                backgroundColor: [
+                    '#2ecc71',
+                    '#95a5a6',
+                    '#3498db',
+                    '#e74c3c'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Order Status Chart
+    const statusLabels = {{ analytics.order_status_breakdown.keys() | list | tojson }};
+    const statusData = {{ analytics.order_status_breakdown.values() | list | tojson }};
+    const statusColors = ['#3498db', '#2ecc71', '#f39c12', '#e74c3c', '#95a5a6', '#9b59b6'];
+    
+    const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+    new Chart(orderStatusCtx, {
+        type: 'pie',
+        data: {
+            labels: statusLabels.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+            datasets: [{
+                data: statusData,
+                backgroundColor: statusColors.slice(0, statusLabels.length)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

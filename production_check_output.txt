@@ -1,0 +1,25 @@
+﻿Γ¥î Unexpected error during Gmail setup: No module named 'googleapiclient'
+ΓÜá∩╕Å Gmail service not available - email sending disabled
+ΓÜá∩╕Å Gmail service not available - email sending disabled
+[OK] All required tables present (22 total tables)
+[OK] System settings accessible
+  - Standard Shipping: GHΓé╡ 20.0
+  - Express Shipping: GHΓé╡ 50.0
+  - Free Shipping Threshold: GHΓé╡ 500.0
+  - Tax Rate: 5.0%
+
+[2] CRITICAL FEATURES CHECK
+--------------------------------------------------------------------------------
+[OK] User Authentication
+[OK] Product Catalog
+[OK] Shopping Cart
+[OK] Checkout
+[MISSING] Shipping
+[OK] Payment
+[OK] Admin Panel
+[OK] User Account
+[MISSING] Email Verification
+[MISSING] SMS
+
+[3] SECURITY CONFIGURATION CHECK
+--------------------------------------------------------------------------------

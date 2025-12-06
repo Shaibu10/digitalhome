@@ -1,0 +1,462 @@
+{% extends "admin/base.html" %}
+
+{% block title %}System Settings - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-cog me-2"></i>System Settings
+            </h1>
+        </div>
+    </div>
+
+    <!-- Settings Tabs -->
+    <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="shipping-tab" data-bs-toggle="tab" 
+                    data-bs-target="#shipping" type="button" role="tab">
+                <i class="fas fa-truck me-2"></i>Shipping Settings
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tax-tab" data-bs-toggle="tab" 
+                    data-bs-target="#tax" type="button" role="tab">
+                <i class="fas fa-percent me-2"></i>Tax Settings
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="settingsContent">
+        <!-- Shipping Settings Tab -->
+        <div class="tab-pane fade show active" id="shipping" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck me-2"></i>Shipping Cost Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="shippingForm" method="POST" action="{{ url_for('admin_settings') }}">
+                        <!-- Costs Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-dollar-sign me-2"></i>Shipping Costs
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="standard_shipping" class="form-label">
+                                        <i class="fas fa-cube me-2"></i>Standard Shipping Cost (GH₵)
+                                    </label>
+                                    <input type="number" class="form-control" id="standard_shipping" 
+                                           name="standard_shipping_cost" 
+                                           value="{{ settings.standard_shipping_cost }}"
+                                           step="0.01" min="0" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="express_shipping" class="form-label">
+                                        <i class="fas fa-bolt me-2"></i>Express Shipping Cost (GH₵)
+                                    </label>
+                                    <input type="number" class="form-control" id="express_shipping" 
+                                           name="express_shipping_cost" 
+                                           value="{{ settings.express_shipping_cost }}"
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="free_threshold" class="form-label">
+                                        <i class="fas fa-gift me-2"></i>Free Shipping Threshold (GH₵)
+                                    </label>
+                                    <input type="number" class="form-control" id="free_threshold" 
+                                           name="free_shipping_threshold" 
+                                           value="{{ settings.free_shipping_threshold }}"
+                                           step="0.01" min="0" required>
+                                    <small class="text-muted">Orders above this amount get free shipping</small>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-info-circle me-2"></i>Current Threshold
+                                    </label>
+                                    <div class="alert alert-info mb-0">
+                                        <strong>GH₵ {{ settings.free_shipping_threshold|round(2) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Days Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-calendar-days me-2"></i>Delivery Time (Days, Hours, Minutes)
+                            </h6>
+                            
+                            <!-- Standard Shipping Days & Time -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="fas fa-cube me-2"></i>Standard Shipping
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_min_days" class="form-label">From Days</label>
+                                    <input type="number" class="form-control" id="standard_min_days" 
+                                           name="standard_shipping_days_min" 
+                                           value="{{ settings.standard_shipping_days_min }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_min_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="standard_min_hours" 
+                                           name="standard_shipping_hours_min" 
+                                           value="{{ settings.standard_shipping_hours_min }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_min_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="standard_min_minutes" 
+                                           name="standard_shipping_minutes_min" 
+                                           value="{{ settings.standard_shipping_minutes_min }}"
+                                           min="0" max="59" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_max_days" class="form-label">To Days</label>
+                                    <input type="number" class="form-control" id="standard_max_days" 
+                                           name="standard_shipping_days_max" 
+                                           value="{{ settings.standard_shipping_days_max }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_max_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="standard_max_hours" 
+                                           name="standard_shipping_hours_max" 
+                                           value="{{ settings.standard_shipping_hours_max }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="standard_max_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="standard_max_minutes" 
+                                           name="standard_shipping_minutes_max" 
+                                           value="{{ settings.standard_shipping_minutes_max }}"
+                                           min="0" max="59" required>
+                                </div>
+                            </div>
+
+                            <!-- Express Shipping Days & Time -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="fas fa-bolt me-2"></i>Express Shipping
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_min_days" class="form-label">From Days</label>
+                                    <input type="number" class="form-control" id="express_min_days" 
+                                           name="express_shipping_days_min" 
+                                           value="{{ settings.express_shipping_days_min }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_min_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="express_min_hours" 
+                                           name="express_shipping_hours_min" 
+                                           value="{{ settings.express_shipping_hours_min }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_min_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="express_min_minutes" 
+                                           name="express_shipping_minutes_min" 
+                                           value="{{ settings.express_shipping_minutes_min }}"
+                                           min="0" max="59" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_max_days" class="form-label">To Days</label>
+                                    <input type="number" class="form-control" id="express_max_days" 
+                                           name="express_shipping_days_max" 
+                                           value="{{ settings.express_shipping_days_max }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_max_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="express_max_hours" 
+                                           name="express_shipping_hours_max" 
+                                           value="{{ settings.express_shipping_hours_max }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="express_max_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="express_max_minutes" 
+                                           name="express_shipping_minutes_max" 
+                                           value="{{ settings.express_shipping_minutes_max }}"
+                                           min="0" max="59" required>
+                                </div>
+                            </div>
+
+                            <!-- Free Shipping Days & Time -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="fas fa-gift me-2"></i>Free Shipping
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_min_days" class="form-label">From Days</label>
+                                    <input type="number" class="form-control" id="free_min_days" 
+                                           name="free_shipping_days_min" 
+                                           value="{{ settings.free_shipping_days_min }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_min_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="free_min_hours" 
+                                           name="free_shipping_hours_min" 
+                                           value="{{ settings.free_shipping_hours_min }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_min_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="free_min_minutes" 
+                                           name="free_shipping_minutes_min" 
+                                           value="{{ settings.free_shipping_minutes_min }}"
+                                           min="0" max="59" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_max_days" class="form-label">To Days</label>
+                                    <input type="number" class="form-control" id="free_max_days" 
+                                           name="free_shipping_days_max" 
+                                           value="{{ settings.free_shipping_days_max }}"
+                                           min="0" max="30" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_max_hours" class="form-label">Hours</label>
+                                    <input type="number" class="form-control" id="free_max_hours" 
+                                           name="free_shipping_hours_max" 
+                                           value="{{ settings.free_shipping_hours_max }}"
+                                           min="0" max="23" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label for="free_max_minutes" class="form-label">Minutes</label>
+                                    <input type="number" class="form-control" id="free_max_minutes" 
+                                           name="free_shipping_minutes_max" 
+                                           value="{{ settings.free_shipping_minutes_max }}"
+                                           min="0" max="59" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-light border">
+                            <h6 class="mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Shipping Options Summary
+                            </h6>
+                            <ul class="mb-0">
+                                <li><strong>Free Shipping:</strong> Orders ≥ GH₵ <span id="preview_threshold">{{ settings.free_shipping_threshold|round(2) }}</span> (<span id="preview_free_days">{{ settings.free_shipping_days_min }}-{{ settings.free_shipping_days_max }}</span>d <span id="preview_free_time">{{ "%02d" % settings.free_shipping_hours_min }}h{{ "%02d" % settings.free_shipping_minutes_min }}m - {{ "%02d" % settings.free_shipping_hours_max }}h{{ "%02d" % settings.free_shipping_minutes_max }}m</span>)</li>
+                                <li><strong>Standard Shipping:</strong> GH₵ <span id="preview_standard">{{ settings.standard_shipping_cost|round(2) }}</span> (<span id="preview_standard_days">{{ settings.standard_shipping_days_min }}-{{ settings.standard_shipping_days_max }}</span>d <span id="preview_standard_time">{{ "%02d" % settings.standard_shipping_hours_min }}h{{ "%02d" % settings.standard_shipping_minutes_min }}m - {{ "%02d" % settings.standard_shipping_hours_max }}h{{ "%02d" % settings.standard_shipping_minutes_max }}m</span>)</li>
+                                <li><strong>Express Shipping:</strong> GH₵ <span id="preview_express">{{ settings.express_shipping_cost|round(2) }}</span> (<span id="preview_express_days">{{ settings.express_shipping_days_min }}-{{ settings.express_shipping_days_max }}</span>d <span id="preview_express_time">{{ "%02d" % settings.express_shipping_hours_min }}h{{ "%02d" % settings.express_shipping_minutes_min }}m - {{ "%02d" % settings.express_shipping_hours_max }}h{{ "%02d" % settings.express_shipping_minutes_max }}m</span>)</li>
+                            </ul>
+                        </div>
+
+                        <input type="hidden" name="settings_type" value="shipping">
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Shipping Settings
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-2"></i>Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Audit Info -->
+            <div class="card mt-3">
+                <div class="card-body small text-muted">
+                    <i class="fas fa-history me-2"></i>
+                    Last updated: {{ settings.updated_at.strftime('%Y-%m-%d %H:%M:%S') if settings.updated_at else 'Never' }}
+                    {% if settings.updated_by %}
+                        by <strong>{{ settings.updated_by.username }}</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Settings Tab -->
+        <div class="tab-pane fade" id="tax" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-percent me-2"></i>Tax Rate Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="taxForm" method="POST" action="{{ url_for('admin_settings') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="tax_rate" class="form-label">
+                                    <i class="fas fa-percentage me-2"></i>Tax Rate (%)
+                                </label>
+                                <div class="input-group mb-3">
+                                    <input type="number" class="form-control" id="tax_rate" 
+                                           name="tax_rate" 
+                                           value="{{ (settings.tax_rate * 100)|int }}"
+                                           step="0.01" min="0" max="100" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <small class="text-muted">Applied to all orders</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-calculator me-2"></i>Tax Example
+                                </label>
+                                <div class="alert alert-light border">
+                                    <small>
+                                        Order: GH₵ 100.00<br>
+                                        Tax (@<span id="tax_preview">{{ (settings.tax_rate * 100)|int }}</span>%): GH₵ <span id="tax_amount">{{ (100 * settings.tax_rate)|round(2) }}</span><br>
+                                        <strong>Total: GH₵ <span id="tax_total">{{ (100 + 100 * settings.tax_rate)|round(2) }}</span></strong>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Tip:</strong> Common tax rates include:
+                            <ul class="mb-0 mt-2">
+                                <li>0% - No tax</li>
+                                <li>5% - Standard VAT</li>
+                                <li>10% - Higher VAT</li>
+                                <li>15% - Premium tax</li>
+                            </ul>
+                        </div>
+
+                        <input type="hidden" name="settings_type" value="tax">
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Save Tax Settings
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-2"></i>Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Audit Info -->
+            <div class="card mt-3">
+                <div class="card-body small text-muted">
+                    <i class="fas fa-history me-2"></i>
+                    Last updated: {{ settings.updated_at.strftime('%Y-%m-%d %H:%M:%S') if settings.updated_at else 'Never' }}
+                    {% if settings.updated_by %}
+                        by <strong>{{ settings.updated_by.username }}</strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update shipping preview in real-time
+    document.getElementById('standard_shipping').addEventListener('input', function() {
+        document.getElementById('preview_standard').textContent = parseFloat(this.value).toFixed(2);
+    });
+    
+    document.getElementById('express_shipping').addEventListener('input', function() {
+        document.getElementById('preview_express').textContent = parseFloat(this.value).toFixed(2);
+    });
+    
+    document.getElementById('free_threshold').addEventListener('input', function() {
+        document.getElementById('preview_threshold').textContent = parseFloat(this.value).toFixed(2);
+    });
+
+    // Update shipping days preview in real-time
+    document.getElementById('standard_min_days').addEventListener('input', function() {
+        updateStandardDaysPreview();
+    });
+    
+    document.getElementById('standard_max_days').addEventListener('input', function() {
+        updateStandardDaysPreview();
+    });
+
+    function updateStandardDaysPreview() {
+        const minDays = document.getElementById('standard_min_days').value;
+        const maxDays = document.getElementById('standard_max_days').value;
+        const minHours = String(document.getElementById('standard_min_hours').value).padStart(2, '0');
+        const minMinutes = String(document.getElementById('standard_min_minutes').value).padStart(2, '0');
+        const maxHours = String(document.getElementById('standard_max_hours').value).padStart(2, '0');
+        const maxMinutes = String(document.getElementById('standard_max_minutes').value).padStart(2, '0');
+        document.getElementById('preview_standard_days').textContent = minDays + '-' + maxDays + 'd';
+        document.getElementById('preview_standard_time').textContent = minHours + 'h' + minMinutes + 'm - ' + maxHours + 'h' + maxMinutes + 'm';
+    }
+    
+    document.getElementById('standard_min_days').addEventListener('input', updateStandardDaysPreview);
+    document.getElementById('standard_max_days').addEventListener('input', updateStandardDaysPreview);
+    document.getElementById('standard_min_hours').addEventListener('input', updateStandardDaysPreview);
+    document.getElementById('standard_max_hours').addEventListener('input', updateStandardDaysPreview);
+    document.getElementById('standard_min_minutes').addEventListener('input', updateStandardDaysPreview);
+    document.getElementById('standard_max_minutes').addEventListener('input', updateStandardDaysPreview);
+
+    function updateExpressDaysPreview() {
+        const minDays = document.getElementById('express_min_days').value;
+        const maxDays = document.getElementById('express_max_days').value;
+        const minHours = String(document.getElementById('express_min_hours').value).padStart(2, '0');
+        const minMinutes = String(document.getElementById('express_min_minutes').value).padStart(2, '0');
+        const maxHours = String(document.getElementById('express_max_hours').value).padStart(2, '0');
+        const maxMinutes = String(document.getElementById('express_max_minutes').value).padStart(2, '0');
+        document.getElementById('preview_express_days').textContent = minDays + '-' + maxDays + 'd';
+        document.getElementById('preview_express_time').textContent = minHours + 'h' + minMinutes + 'm - ' + maxHours + 'h' + maxMinutes + 'm';
+    }
+    
+    document.getElementById('express_min_days').addEventListener('input', updateExpressDaysPreview);
+    document.getElementById('express_max_days').addEventListener('input', updateExpressDaysPreview);
+    document.getElementById('express_min_hours').addEventListener('input', updateExpressDaysPreview);
+    document.getElementById('express_max_hours').addEventListener('input', updateExpressDaysPreview);
+    document.getElementById('express_min_minutes').addEventListener('input', updateExpressDaysPreview);
+    document.getElementById('express_max_minutes').addEventListener('input', updateExpressDaysPreview);
+
+    function updateFreeDaysPreview() {
+        const minDays = document.getElementById('free_min_days').value;
+        const maxDays = document.getElementById('free_max_days').value;
+        const minHours = String(document.getElementById('free_min_hours').value).padStart(2, '0');
+        const minMinutes = String(document.getElementById('free_min_minutes').value).padStart(2, '0');
+        const maxHours = String(document.getElementById('free_max_hours').value).padStart(2, '0');
+        const maxMinutes = String(document.getElementById('free_max_minutes').value).padStart(2, '0');
+        document.getElementById('preview_free_days').textContent = minDays + '-' + maxDays + 'd';
+        document.getElementById('preview_free_time').textContent = minHours + 'h' + minMinutes + 'm - ' + maxHours + 'h' + maxMinutes + 'm';
+    }
+    
+    document.getElementById('free_min_days').addEventListener('input', updateFreeDaysPreview);
+    document.getElementById('free_max_days').addEventListener('input', updateFreeDaysPreview);
+    document.getElementById('free_min_hours').addEventListener('input', updateFreeDaysPreview);
+    document.getElementById('free_max_hours').addEventListener('input', updateFreeDaysPreview);
+    document.getElementById('free_min_minutes').addEventListener('input', updateFreeDaysPreview);
+    document.getElementById('free_max_minutes').addEventListener('input', updateFreeDaysPreview);
+
+    // Update tax preview in real-time
+    document.getElementById('tax_rate').addEventListener('input', function() {
+        const rate = parseFloat(this.value) / 100;
+        const taxAmount = (100 * rate).toFixed(2);
+        const total = (100 + 100 * rate).toFixed(2);
+        
+        document.getElementById('tax_preview').textContent = this.value;
+        document.getElementById('tax_amount').textContent = taxAmount;
+        document.getElementById('tax_total').textContent = total;
+    });
+</script>
+{% endblock %}

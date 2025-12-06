@@ -1,0 +1,296 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - Edit Hero Section{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Edit Hero Section</h1>
+    <a href="{{ url_for('admin_hero_sections') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Hero Sections
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ hero_section.title }}" required 
+                               placeholder="e.g., Summer Sale - Up to 50% Off">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subtitle" class="form-label">Subtitle</label>
+                        <textarea class="form-control" id="subtitle" name="subtitle" rows="3"
+                                  placeholder="e.g., Shop the hottest trends this season. Limited time offer!">{{ hero_section.subtitle }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="button_text" class="form-label">Button Text</label>
+                                <input type="text" class="form-control" id="button_text" name="button_text" 
+                                       value="{{ hero_section.button_text }}" placeholder="e.g., Shop Now, Learn More">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="button_url" class="form-label">Button URL</label>
+                                <input type="text" class="form-control" id="button_url" name="button_url" 
+                                       value="{{ hero_section.button_url }}" placeholder="e.g., /products, /categories/1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- Current Image -->
+                    {% if hero_section.image %}
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+                        <div>
+                            <img src="{{ url_for('static', filename='uploads/' + hero_section.image) }}" 
+                                 alt="{{ hero_section.title }}" 
+                                 style="max-width: 200px; max-height: 150px; object-fit: cover;" 
+                                 class="img-thumbnail">
+                            <div class="form-text">Current: {{ hero_section.image }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Update Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">Leave empty to keep current image. Recommended: 1200x600 pixels</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="background_color" class="form-label">Background Color</label>
+                                <select class="form-select" id="background_color" name="background_color">
+                                    <option value="bg-primary" {% if hero_section.background_color == 'bg-primary' %}selected{% endif %}>Blue (Primary)</option>
+                                    <option value="bg-success" {% if hero_section.background_color == 'bg-success' %}selected{% endif %}>Green (Success)</option>
+                                    <option value="bg-warning" {% if hero_section.background_color == 'bg-warning' %}selected{% endif %}>Yellow (Warning)</option>
+                                    <option value="bg-danger" {% if hero_section.background_color == 'bg-danger' %}selected{% endif %}>Red (Danger)</option>
+                                    <option value="bg-dark" {% if hero_section.background_color == 'bg-dark' %}selected{% endif %}>Dark</option>
+                                    <option value="bg-light" {% if hero_section.background_color == 'bg-light' %}selected{% endif %}>Light</option>
+                                    <option value="bg-gradient" {% if hero_section.background_color == 'bg-gradient' %}selected{% endif %}>Gradient</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="text_color" class="form-label">Text Color</label>
+                                <select class="form-select" id="text_color" name="text_color">
+                                    <option value="text-white" {% if hero_section.text_color == 'text-white' %}selected{% endif %}>White</option>
+                                    <option value="text-dark" {% if hero_section.text_color == 'text-dark' %}selected{% endif %}>Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="display_order" class="form-label">Display Order</label>
+                                <input type="number" class="form-control" id="display_order" name="display_order" 
+                                       value="{{ hero_section.display_order }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                           {% if hero_section.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">
+                                        Active Section
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    {% if hero_section.is_active %}
+                                    <span class="text-success">✓ Currently active on homepage</span>
+                                    {% else %}
+                                    <span class="text-muted">Not active</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Hero Section
+                </button>
+                <a href="{{ url_for('admin_hero_sections') }}" class="btn btn-secondary">Cancel</a>
+                
+                {% if not hero_section.is_active %}
+                <a href="{{ url_for('admin_activate_hero_section', hero_id=hero_section.id) }}" 
+                   class="btn btn-success">
+                    <i class="fas fa-play"></i> Set as Active
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Preview Section -->
+<!-- In your template, update the preview container -->
+<div class="preview-container border rounded p-4" 
+     data-current-image="{% if hero_section.image %}{{ url_for('static', filename='uploads/' + hero_section.image) }}{% endif %}">
+    <p class="text-muted">Preview will update as you make changes...</p>
+</div>
+
+<!-- Hero Section Stats -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Section Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Created:</th>
+                        <td>{{ hero_section.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{{ hero_section.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td>
+                            {% if hero_section.is_active %}
+                            <span class="badge bg-success">Active on Homepage</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not hero_section.is_active %}
+                    <a href="{{ url_for('admin_activate_hero_section', hero_id=hero_section.id) }}" 
+                       class="btn btn-success btn-sm">
+                        <i class="fas fa-play"></i> Activate This Section
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const preview = document.querySelector('.preview-container');
+    const imageInput = document.getElementById('image');
+    
+    // Get current image URL from data attribute
+    const currentImageUrl = preview.getAttribute('data-current-image') || null;
+    
+    function updatePreview() {
+        const title = document.getElementById('title').value || 'Hero Title';
+        const subtitle = document.getElementById('subtitle').value || 'Hero subtitle text goes here...';
+        const buttonText = document.getElementById('button_text').value || 'Shop Now';
+        const bgColor = document.getElementById('background_color').value;
+        const textColor = document.getElementById('text_color').value;
+        
+        let bgStyle = '';
+        if (bgColor === 'bg-gradient') {
+            bgStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+        }
+        
+        // Image preview HTML
+        let imageHtml = `
+            <div class="col-md-6 text-center preview-image">
+                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                     style="height: 150px; opacity: 0.5;">
+                    <i class="fas fa-image fa-2x ${textColor}"></i>
+                </div>
+            </div>
+        `;
+        
+        preview.innerHTML = `
+            <div class="p-4 rounded" style="${bgStyle}" class="${bgColor !== 'bg-gradient' ? bgColor : ''} ${textColor}">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3>${title}</h3>
+                        <p class="mb-3">${subtitle}</p>
+                        <button class="btn ${textColor === 'text-dark' ? 'btn-dark' : 'btn-light'}">${buttonText}</button>
+                    </div>
+                    ${imageHtml}
+                </div>
+                <div class="mt-2 small text-muted">
+                    Background: ${bgColor}, Text: ${textColor}
+                </div>
+            </div>
+        `;
+        
+        // Load appropriate image
+        loadPreviewImage();
+    }
+    
+    function loadPreviewImage() {
+        const previewImage = preview.querySelector('.preview-image');
+        
+        if (imageInput.files && imageInput.files[0]) {
+            // Load new selected image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.innerHTML = `
+                    <img src="${e.target.result}" 
+                         alt="Preview" 
+                         style="max-height: 150px; object-fit: cover;"
+                         class="img-fluid rounded">
+                `;
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+        } else if (currentImageUrl) {
+            // Load existing image
+            previewImage.innerHTML = `
+                <img src="${currentImageUrl}" 
+                     alt="Current Image" 
+                     style="max-height: 150px; object-fit: cover;"
+                     class="img-fluid rounded"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkM3NTgxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI0ZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+            `;
+        }
+    }
+    
+    // Update preview on any input change
+    form.addEventListener('input', updatePreview);
+    form.addEventListener('change', updatePreview);
+    
+    // Handle image file selection
+    imageInput.addEventListener('change', function() {
+        updatePreview();
+    });
+    
+    // Initial preview
+    updatePreview();
+});
+</script>
+
+{% endblock %}

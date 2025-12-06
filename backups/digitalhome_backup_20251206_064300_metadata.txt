@@ -1,0 +1,5 @@
+filename: digitalhome_backup_20251206_064300.db
+timestamp: 2025-12-06T06:43:00.998347
+size_bytes: 184320
+description: Test backup for functionality verification
+verified: True

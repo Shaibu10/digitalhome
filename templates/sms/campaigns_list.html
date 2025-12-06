@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Campaigns{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">
+            <i class="fas fa-broadcast-tower me-2"></i> SMS Campaigns
+        </h1>
+        <a href="{{ url_for('sms.create_campaign') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i> New Campaign
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <select class="form-select" name="status">
+                        <option value="">All Status</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-filter me-2"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Campaign Name</th>
+                    <th>Recipients</th>
+                    <th>Status</th>
+                    <th>Sent/Failed</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if campaigns.items %}
+                    {% for campaign in campaigns.items %}
+                    <tr>
+                        <td>
+                            <strong>{{ campaign.name }}</strong><br>
+                            <small class="text-muted">{{ campaign.created_by.username }}</small>
+                        </td>
+                        <td>{{ campaign.recipient_count }}</td>
+                        <td>
+                            <span class="badge bg-{{ campaign.get_status_badge() }}">
+                                {{ campaign.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ campaign.messages_sent }}/<span class="text-danger">{{ campaign.messages_failed }}</span>
+                        </td>
+                        <td>{{ campaign.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('sms.view_campaign', campaign_id=campaign.id) }}" 
+                               class="btn btn-sm btn-info" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if campaign.status in ['draft', 'scheduled'] %}
+                            <a href="{{ url_for('sms.campaigns') }}" class="btn btn-sm btn-danger" 
+                               onclick="if(confirm('Cancel this campaign?')) fetch('{{ url_for('sms.cancel_campaign', campaign_id=campaign.id) }}', {method: 'POST'}); return false;" 
+                               title="Cancel">
+                                <i class="fas fa-ban"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No campaigns found</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if campaigns.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if campaigns.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.campaigns', page=campaigns.prev_num, status=status_filter) }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in campaigns.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == campaigns.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sms.campaigns', page=page_num, status=status_filter) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if campaigns.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.campaigns', page=campaigns.next_num, status=status_filter) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-1">My Orders</h1>
+            <p class="text-muted">View and track all your orders</p>
+        </div>
+    </div>
+
+    {% if orders %}
+    <!-- Filter Options -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" onclick="filterOrders('all')">
+                    All Orders <span class="badge bg-primary">{{ orders|length }}</span>
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterOrders('pending')">
+                    Pending
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterOrders('processing')">
+                    Processing
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterOrders('shipped')">
+                    Shipped
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterOrders('delivered')">
+                    Delivered
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div id="ordersContainer">
+        {% for order in orders %}
+        <div class="order-item card shadow-sm mb-3 filter-status-{{ order.status }}" data-status="{{ order.status }}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <!-- Order Number and Status -->
+                    <div class="col-md-3">
+                        <div>
+                            <small class="text-muted">Order Number</small>
+                            <h6 class="mb-0"><a href="{{ url_for('order_detail', order_id=order.id) }}" class="text-decoration-none">{{ order.order_number }}</a></h6>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Order Date</small>
+                            <p class="mb-0">{{ order.created_at.strftime('%b %d, %Y') }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Count and Total -->
+                    <div class="col-md-3">
+                        <div>
+                            <small class="text-muted">Items</small>
+                            <h6 class="mb-0">{{ order.order_items|length }} item{% if order.order_items|length > 1 %}s{% endif %}</h6>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Total Amount</small>
+                            <h6 class="mb-0 text-primary">GH₵ {{ "%.2f"|format(order.total_amount) }}</h6>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-3">
+                        <div>
+                            <small class="text-muted">Order Status</small>
+                            <div>
+                                <span class="badge bg-{{ order.get_status_badge() }} p-2">
+                                    <i class="fas fa-box me-1"></i>{{ order.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Payment</small>
+                            <div>
+                                <span class="badge bg-{{ order.get_payment_badge() }} p-2">
+                                    {{ order.payment_status|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-md-3 text-md-end">
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% if order.status in ['pending', 'confirmed'] %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelOrder({{ order.id }})">
+                                <i class="fas fa-times me-1"></i>Cancel Order
+                            </button>
+                            {% endif %}
+                            {% if order.status == 'delivered' %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="leaveReview({{ order.id }})">
+                                <i class="fas fa-star me-1"></i>Leave Review
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Preview -->
+                <div class="row mt-3 pt-3 border-top">
+                    <div class="col-12">
+                        <small class="text-muted d-block mb-2">Items Ordered:</small>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for item in order.order_items[:5] %}
+                            <span class="badge bg-light text-dark">
+                                {{ item.product_name }} (x{{ item.quantity }})
+                            </span>
+                            {% endfor %}
+                            {% if order.order_items|length > 5 %}
+                            <span class="badge bg-light text-dark">
+                                +{{ order.order_items|length - 5 }} more
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tracking Info -->
+                {% if order.status in ['shipped', 'delivered'] and order.tracking_number %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <small class="text-muted d-block mb-2">Tracking Number:</small>
+                        <code class="bg-light p-2 rounded d-inline-block">{{ order.tracking_number }}</code>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-light border text-center py-5">
+                <i class="fas fa-shopping-bag fa-4x text-muted mb-3 d-block"></i>
+                <h4>No Orders Yet</h4>
+                <p class="text-muted mb-3">You haven't placed any orders yet. Start shopping now!</p>
+                <a href="{{ url_for('products') }}" class="btn btn-primary">
+                    <i class="fas fa-shopping-cart me-2"></i>Browse Products
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Rating</label>
+                        <select class="form-select" id="rating" required>
+                            <option value="">Select rating...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ Good</option>
+                            <option value="3">⭐⭐⭐ Average</option>
+                            <option value="2">⭐⭐ Poor</option>
+                            <option value="1">⭐ Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Review</label>
+                        <textarea class="form-control" id="comment" rows="4" placeholder="Share your experience..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterOrders(status) {
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.btn').classList.add('active');
+
+    const orders = document.querySelectorAll('.order-item');
+    orders.forEach(order => {
+        if (status === 'all') {
+            order.style.display = 'block';
+        } else if (order.dataset.status === status) {
+            order.style.display = 'block';
+        } else {
+            order.style.display = 'none';
+        }
+    });
+}
+
+function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+        return;
+    }
+
+    fetch(`/account/order/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Order cancelled successfully');
+            location.reload();
+        } else {
+            alert(data.message || 'Error cancelling order');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error cancelling order');
+    });
+}
+
+function leaveReview(orderId) {
+    document.getElementById('reviewForm').dataset.orderId = orderId;
+    new bootstrap.Modal(document.getElementById('reviewModal')).show();
+}
+
+function submitReview() {
+    const form = document.getElementById('reviewForm');
+    const rating = document.getElementById('rating').value;
+    const comment = document.getElementById('comment').value;
+    const orderId = form.dataset.orderId;
+
+    if (!rating || !comment) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    fetch(`/account/order/${orderId}/review`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            rating: rating,
+            comment: comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Review submitted successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+            location.reload();
+        } else {
+            alert(data.message || 'Error submitting review');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting review');
+    });
+}
+</script>
+
+<style>
+    .order-item {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .order-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    @media (max-width: 768px) {
+        .order-item .row [class*='col-'] {
+            margin-bottom: 1rem;
+        }
+
+        .text-md-end {
+            text-align: left !important;
+        }
+
+        .d-flex.flex-column.gap-2 {
+            flex-direction: row !important;
+            gap: 0.5rem !important;
+        }
+
+        .d-flex.flex-column.gap-2 .btn {
+            flex: 1;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+{% endblock %}

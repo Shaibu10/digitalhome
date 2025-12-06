@@ -1,0 +1,5 @@
+filename: digitalhome_backup_20251206_065826.db
+timestamp: 2025-12-06T06:58:26.363991
+size_bytes: 184320
+description: 
+verified: True

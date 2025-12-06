@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .notice { background: #e3f2fd; border: 1px solid #bbdefb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; padding: 20px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Admin Privileges Updated</h1>
+            <p>Notice regarding your {{ app_name }} account</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{ user.username }},</h2>
+            
+            <div class="notice">
+                <strong>Update:</strong> Your <strong>Administrator privileges</strong> have been revoked.
+            </div>
+            
+            <p><strong>Account Details:</strong></p>
+            <ul>
+                <li>Account: {{ user.username }}</li>
+                <li>New Role: Regular User</li>
+                <li>Updated by: {{ performed_by.username }}</li>
+                <li>Time: {{ now().strftime('%Y-%m-%d %H:%M') }}</li>
+            </ul>
+            
+            <p><strong>What's changed:</strong></p>
+            <ul>
+                <li>You no longer have access to the Admin Dashboard</li>
+                <li>You cannot manage users, products, or orders</li>
+                <li>Your account continues to function as a regular user</li>
+                <li>You can still shop and use all customer features</li>
+            </ul>
+            
+            <p>If you have any questions about this change, please contact the system administrator.</p>
+            
+            <p>Best regards,<br>The {{ app_name }} Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{ now().year }} {{ app_name }}. All rights reserved.</p>
+            <p>
+                <a href="{{ app_url }}/privacy">Privacy Policy</a> | 
+                <a href="{{ app_url }}/terms">Terms of Service</a> | 
+                <a href="mailto:{{ support_email }}">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

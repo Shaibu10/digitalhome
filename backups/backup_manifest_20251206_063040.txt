@@ -1,0 +1,27 @@
+Digital Home E-Commerce Database Backup
+======================================================================
+
+Backup Date: 2025-12-06 06:30:40
+Backup File: app_backup_20251206_063040.db
+Backup Path: e:\python_projects\digialhome\backups\app_backup_20251206_063040.db
+Backup Size: 0.00 MB
+Source Database: e:\python_projects\digialhome\instance\app.db
+Original Size: 0.00 MB
+
+Tables Included:
+  - user (User accounts)
+  - product (Product catalog)
+  - category (Product categories)
+  - order (Customer orders)
+  - order_item (Items in orders)
+  - cart_item (Shopping cart items)
+  - system_settings (Configuration)
+  - review (Product reviews)
+  - and more...
+
+Restore Instructions:
+  1. Stop the Flask application
+  2. Copy this backup file to: instance/app.db
+  3. Restart the Flask application
+
+Backup Status: SUCCESSFUL

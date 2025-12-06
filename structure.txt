@@ -1,0 +1,63 @@
+ecommerce-site/
+├── app.py
+├── config.py
+├── models.py
+├── requirements.txt
+├── run.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── script.js
+│   └── images/
+│       ├── hero-image.jpg
+│       ├── default-product.jpg
+│       └── default-category.jpg
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── products.html
+│   ├── product_detail.html
+│   ├── cart.html
+│   ├── auth/
+│   │   ├── login.html
+│   │   └── register.html
+│   └── admin/
+│       ├── dashboard.html
+│       ├── products.html
+│       ├── add_product.html
+│       ├── orders.html
+│       └── categories.html
+└── uploads/
+    └── .gitkeep
+
+
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python app.py
+The application will be available at http://localhost:5000
+
+Admin Login:
+
+Email: admin@example.com
+
+Password: admin123
+
+Features included:
+
+✅ User authentication (login/register)
+
+✅ Product catalog with categories
+
+✅ Shopping cart functionality
+
+✅ Admin dashboard with product/order/category management
+
+✅ Image upload for products
+
+✅ Responsive design
+
+✅ Search and filtering

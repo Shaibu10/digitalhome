@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}SMS Blacklist Management{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="h2 mb-4">
+        <i class="fas fa-ban me-2"></i> SMS Blacklist Management
+    </h1>
+
+    <!-- Add to Blacklist Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Add Phone Number to Blacklist</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="phone_number" placeholder="Phone number (e.g., +233241234567)" required>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="reason">
+                        <option value="user_request">User Request</option>
+                        <option value="invalid_number">Invalid Number</option>
+                        <option value="carrier_block">Carrier Block</option>
+                        <option value="spam_complaint">Spam Complaint</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-plus me-2"></i> Blacklist
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Blacklist Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Phone Number</th>
+                        <th>Reason</th>
+                        <th>Added By</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if blacklist.items %}
+                        {% for entry in blacklist.items %}
+                        <tr>
+                            <td><code>{{ entry.phone_number }}</code></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ entry.reason.replace('_', ' ').title() }}</span>
+                            </td>
+                            <td>{{ entry.added_by.username if entry.added_by else 'System' }}</td>
+                            <td>{{ entry.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('sms.remove_blacklist', entry_id=entry.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Remove from blacklist?')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No blacklisted numbers</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if blacklist.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if blacklist.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.blacklist_management', page=blacklist.prev_num) }}">
+                    Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in blacklist.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == blacklist.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('sms.blacklist_management', page=page_num) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if blacklist.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('sms.blacklist_management', page=blacklist.next_num) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

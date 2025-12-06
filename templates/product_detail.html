@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Share Buttons Styling */
+    .share-section {
+        background: linear-gradient(135deg, rgba(0,123,255,0.05) 0%, rgba(25,135,84,0.05) 100%);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+    
+    .share-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .share-btn {
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        border-radius: 6px;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .share-btn i {
+        font-size: 1rem;
+    }
+    
+    /* Facebook */
+    .share-facebook {
+        border-color: #1877f2;
+        color: #1877f2;
+    }
+    
+    .share-facebook:hover {
+        background-color: #1877f2;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(24,119,242,0.3);
+    }
+    
+    /* Twitter */
+    .share-twitter {
+        border-color: #1da1f2;
+        color: #1da1f2;
+    }
+    
+    .share-twitter:hover {
+        background-color: #1da1f2;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(29,161,242,0.3);
+    }
+    
+    /* WhatsApp */
+    .share-whatsapp {
+        border-color: #25d366;
+        color: #25d366;
+    }
+    
+    .share-whatsapp:hover {
+        background-color: #25d366;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37,211,102,0.3);
+    }
+    
+    /* Email */
+    .share-email {
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+    
+    .share-email:hover {
+        background-color: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108,117,125,0.3);
+    }
+    
+    /* Copy Link */
+    .share-copy {
+        border-color: #212529;
+        color: #212529;
+    }
+    
+    .share-copy:hover {
+        background-color: #212529;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(33,37,41,0.3);
+    }
+    
+    /* Responsive */
+    @media (max-width: 576px) {
+        .share-buttons {
+            flex-direction: row;
+        }
+        
+        .share-btn {
+            flex: 1;
+            min-width: 100px;
+            justify-content: center;
+        }
+        
+        .share-btn span {
+            display: none;
+        }
+        
+        .share-btn i {
+            margin: 0;
+        }
+    }
+    
+    .product-detail-main-image {
+        width: 100%;
+        background: #f9f9f9;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        padding: 15px;
+    }
+    
+    .product-detail-main-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+    }
+    
+    .product-related-image {
+        overflow: hidden;
+        background: #f9f9f9;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .product-related-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .product-detail-main-image {
+            min-height: 300px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .product-detail-main-image {
+            min-height: 250px;
+        }
+    }
+</style>
+
+<!-- Dynamic Messages -->
+{% include 'dynamic_messages_display.html' %}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-12 mb-4 mb-md-0">
+            <div class="product-detail-main-image">
+                <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                     alt="{{ product.name }}" loading="eager">
+            </div>
+        </div>
+        <div class="col-lg-6 col-md-6 col-12">
+            <h1>{{ product.name }}</h1>
+            <p class="text-muted">Category: {{ product.category.name }}</p>
+            
+            <div class="price-section mb-3">
+                {% if product.discount_price %}
+                <div class="mb-2">
+                    <span class="badge bg-danger fs-6">-{{ product.discount_percentage() }}% OFF</span>
+                </div>
+                <h2 class="text-danger">GH₵ {{ "%.2f"|format(product.price - product.discount_price) }}</h2>
+                <h4 class="text-muted text-decoration-line-through">GH₵ {{ "%.2f"|format(product.price) }}</h4>
+                <p class="text-success small"><i class="fas fa-check-circle"></i> You save GH₵ {{ "%.2f"|format(product.discount_price) }}</p>
+                {% else %}
+                <h2>GH₵ {{ "%.2f"|format(product.price) }}</h2>
+                {% endif %}
+            </div>
+
+            <div class="stock-info mb-3">
+                {% if product.stock_quantity > 0 %}
+                <span class="badge bg-success">In Stock ({{ product.stock_quantity }} available)</span>
+                {% else %}
+                <span class="badge bg-danger">Out of Stock</span>
+                {% endif %}
+            </div>
+
+            <div class="description mb-4">
+                <h4>Description</h4>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Product Rating & Reviews Section -->
+            <div class="reviews-summary mb-4">
+                <div id="rating-stats">
+                    <p class="text-muted">Loading reviews...</p>
+                </div>
+            </div>
+
+            {% if current_user.is_authenticated and product.stock_quantity > 0 %}
+            <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST">
+                <button type="submit" class="btn btn-primary btn-lg">Add to Cart</button>
+            </form>
+            {% elif not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login to Purchase</a>
+            {% endif %}
+
+            <!-- Share Buttons Section -->
+            <div class="share-section mt-4 pt-4 border-top">
+                <p class="text-muted mb-3"><i class="fas fa-share-alt"></i> Share this product</p>
+                <div class="share-buttons d-flex gap-2 flex-wrap">
+                    <!-- Facebook Share -->
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.base_url }}" 
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-outline-primary share-btn share-facebook" 
+                       title="Share on Facebook"
+                       onclick="window.open(this.href, 'facebook-share', 'width=600,height=400'); return false;">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </a>
+                    
+                    <!-- Twitter/X Share -->
+                    <a href="https://twitter.com/intent/tweet?url={{ request.base_url }}&text=Check%20out%20this%20product:%20{{ product.name | urlencode }}" 
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-outline-info share-btn share-twitter"
+                       title="Share on Twitter/X"
+                       onclick="window.open(this.href, 'twitter-share', 'width=600,height=400'); return false;">
+                        <i class="fab fa-twitter"></i> Twitter
+                    </a>
+                    
+                    <!-- WhatsApp Share -->
+                    <a href="https://api.whatsapp.com/send?text=Check%20out%20this%20product:%20{{ product.name | urlencode }}%20{{ request.base_url }}" 
+                       target="_blank" rel="noopener noreferrer"
+                       class="btn btn-outline-success share-btn share-whatsapp"
+                       title="Share on WhatsApp"
+                       onclick="window.open(this.href, 'whatsapp-share', 'width=600,height=400'); return false;">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </a>
+                    
+                    <!-- Email Share -->
+                    <a href="mailto:?subject={{ product.name | urlencode }}&body=Check%20out%20this%20product:%20{{ product.name | urlencode }}%20%0A%0A{{ request.base_url }}" 
+                       class="btn btn-outline-secondary share-btn share-email"
+                       title="Share via Email">
+                        <i class="fas fa-envelope"></i> Email
+                    </a>
+                    
+                    <!-- Copy Link -->
+                    <button type="button" 
+                            class="btn btn-outline-dark share-btn share-copy" 
+                            id="copy-link-btn"
+                            title="Copy link to clipboard"
+                            onclick="copyToClipboard('{{ request.base_url }}')">
+                        <i class="fas fa-link"></i> Copy Link
+                    </button>
+                </div>
+                <small id="copy-feedback" class="text-success d-none mt-2">
+                    <i class="fas fa-check-circle"></i> Link copied to clipboard!
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Related Products</h3>
+            <div class="row">
+                {% for product in related_products %}
+                <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4">
+                    <div class="card product-card h-100">
+                        <div class="product-related-image">
+                            <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                                 alt="{{ product.name }}" loading="lazy">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text">GH₵ {{ product.price }}</p>
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Reviews Section -->
+<div class="container py-5 border-top">
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">Customer Reviews</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Review Stats Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div id="review-stats" class="card p-4">
+                <p class="text-muted">Loading review statistics...</p>
+            </div>
+        </div>
+
+        <!-- Reviews List & Form -->
+        <div class="col-md-9">
+            <!-- Review Submission Form -->
+            {% if current_user.is_authenticated %}
+            <div class="card p-4 mb-4">
+                <h5 class="mb-3">Share Your Review</h5>
+                <form id="review-form">
+                    <div class="mb-3">
+                        <label class="form-label">Rating *</label>
+                        <div id="rating-input" class="mb-2">
+                            <span class="rating-star" data-rating="1">☆</span>
+                            <span class="rating-star" data-rating="2">☆</span>
+                            <span class="rating-star" data-rating="3">☆</span>
+                            <span class="rating-star" data-rating="4">☆</span>
+                            <span class="rating-star" data-rating="5">☆</span>
+                        </div>
+                        <input type="hidden" id="rating-value" name="rating" value="0">
+                        <small class="text-muted" id="rating-text">Click to rate</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Review Title *</label>
+                        <input type="text" class="form-control" id="review-title" name="title" 
+                               placeholder="Sum up your experience" required minlength="5" maxlength="200">
+                        <small class="form-text text-muted">5-200 characters</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Your Review *</label>
+                        <textarea class="form-control" id="review-content" name="content" 
+                                  placeholder="Share your experience with this product" rows="5" 
+                                  required minlength="20" maxlength="5000"></textarea>
+                        <small class="form-text text-muted">20-5000 characters</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                    <small class="text-muted d-block mt-2">Reviews are moderated before publication</small>
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <a href="{{ url_for('auth.login') }}">Login</a> to share your review
+            </div>
+            {% endif %}
+
+            <!-- Filters & Sorting -->
+            <div class="mb-4 d-flex gap-2 flex-wrap">
+                <div>
+                    <label class="form-label small">Filter by Rating:</label>
+                    <select id="rating-filter" class="form-select form-select-sm">
+                        <option value="all">All Ratings</option>
+                        <option value="5">★★★★★ 5 Stars</option>
+                        <option value="4">★★★★☆ 4 Stars</option>
+                        <option value="3">★★★☆☆ 3 Stars</option>
+                        <option value="2">★★☆☆☆ 2 Stars</option>
+                        <option value="1">★☆☆☆☆ 1 Star</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small">Sort by:</label>
+                    <select id="sort-by" class="form-select form-select-sm">
+                        <option value="recent">Most Recent</option>
+                        <option value="helpful">Most Helpful</option>
+                        <option value="rating_high">Highest Rating</option>
+                        <option value="rating_low">Lowest Rating</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div id="reviews-list">
+                <p class="text-muted">Loading reviews...</p>
+            </div>
+
+            <!-- Pagination -->
+            <nav id="reviews-pagination" class="mt-4" style="display: none;">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item"><a class="page-link" href="#" id="prev-page">Previous</a></li>
+                    <li class="page-item active"><span class="page-link" id="page-info">Page 1</span></li>
+                    <li class="page-item"><a class="page-link" href="#" id="next-page">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating-star {
+        font-size: 2rem;
+        cursor: pointer;
+        margin-right: 0.5rem;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+
+    .rating-star.filled {
+        color: #ffc107;
+    }
+
+    .rating-star:hover,
+    .rating-star.hover {
+        color: #ffc107;
+    }
+
+    .review-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-rating {
+        color: #ffc107;
+        margin-bottom: 0.5rem;
+    }
+
+    .review-verified {
+        display: inline-block;
+        background: #d4edda;
+        color: #155724;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+
+    .review-helpful {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .review-helpful-btn {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+    }
+</style>
+
+<script>
+const productId = {{ product.id }};
+let currentPage = 1;
+let currentSort = 'recent';
+let currentRatingFilter = 'all';
+
+// Rating input handler
+document.querySelectorAll('.rating-star').forEach(star => {
+    star.addEventListener('click', function() {
+        const rating = this.dataset.rating;
+        document.getElementById('rating-value').value = rating;
+        updateRatingDisplay(rating);
+    });
+
+    star.addEventListener('mouseenter', function() {
+        const rating = this.dataset.rating;
+        document.querySelectorAll('.rating-star').forEach((s, idx) => {
+            if (idx < rating) s.classList.add('hover');
+            else s.classList.remove('hover');
+        });
+    });
+});
+
+document.getElementById('rating-input').addEventListener('mouseleave', function() {
+    document.querySelectorAll('.rating-star').forEach(s => s.classList.remove('hover'));
+    updateRatingDisplay(document.getElementById('rating-value').value);
+});
+
+function updateRatingDisplay(rating) {
+    document.querySelectorAll('.rating-star').forEach((s, idx) => {
+        if (idx < rating) s.classList.add('filled');
+        else s.classList.remove('filled');
+    });
+
+    const ratingTexts = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    const ratingText = document.getElementById('rating-text');
+    if (rating > 0) {
+        ratingText.textContent = `${ratingTexts[rating]} (${rating}/5)`;
+    } else {
+        ratingText.textContent = 'Click to rate';
+    }
+}
+
+// Review form submission
+document.getElementById('review-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const rating = document.getElementById('rating-value').value;
+    const title = document.getElementById('review-title').value;
+    const content = document.getElementById('review-content').value;
+
+    if (!rating || rating < 1) {
+        alert('Please select a rating');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/product/${productId}/review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                rating: parseInt(rating),
+                title: title,
+                content: content
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('review-form').reset();
+            updateRatingDisplay(0);
+            // Reload reviews
+            loadReviews();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+
+// Filter and sort change handlers
+document.getElementById('rating-filter').addEventListener('change', (e) => {
+    currentRatingFilter = e.target.value;
+    currentPage = 1;
+    loadReviews();
+});
+
+document.getElementById('sort-by').addEventListener('change', (e) => {
+    currentSort = e.target.value;
+    currentPage = 1;
+    loadReviews();
+});
+
+// Load reviews
+async function loadReviews() {
+    try {
+        const response = await fetch(`/product/${productId}/reviews?page=${currentPage}&sort=${currentSort}&rating=${currentRatingFilter}`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayReviews(data.reviews, data.stats);
+            updatePagination(data.pagination);
+            updateReviewStats(data.stats);
+        }
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+    }
+}
+
+function displayReviews(reviews, stats) {
+    const reviewsList = document.getElementById('reviews-list');
+
+    if (reviews.length === 0) {
+        reviewsList.innerHTML = '<p class="text-muted text-center py-4">No reviews yet. Be the first to review!</p>';
+        return;
+    }
+
+    reviewsList.innerHTML = reviews.map(review => `
+        <div class="review-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="review-rating">
+                        ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                    </div>
+                    <h6>${escapeHtml(review.title)}</h6>
+                    <p class="text-muted small mb-2">
+                        by <strong>${escapeHtml(review.user_name)}</strong> on ${review.created_at}
+                        ${review.is_verified_purchase ? '<span class="review-verified">✓ Verified Purchase</span>' : ''}
+                    </p>
+                    <p>${escapeHtml(review.content)}</p>
+                </div>
+            </div>
+            <div class="review-helpful">
+                <button class="btn btn-outline-secondary btn-sm review-helpful-btn" 
+                        onclick="markHelpful(${review.id}, this)">
+                    👍 Helpful (${review.helpful_count})
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateReviewStats(stats) {
+    const statsDiv = document.getElementById('review-stats');
+    const totalReviews = stats.total_reviews;
+    const avgRating = stats.average_rating;
+    const distribution = stats.rating_distribution;
+
+    let starsHtml = '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating));
+
+    const percentages = {
+        5: totalReviews > 0 ? Math.round((distribution[5] / totalReviews) * 100) : 0,
+        4: totalReviews > 0 ? Math.round((distribution[4] / totalReviews) * 100) : 0,
+        3: totalReviews > 0 ? Math.round((distribution[3] / totalReviews) * 100) : 0,
+        2: totalReviews > 0 ? Math.round((distribution[2] / totalReviews) * 100) : 0,
+        1: totalReviews > 0 ? Math.round((distribution[1] / totalReviews) * 100) : 0,
+    };
+
+    statsDiv.innerHTML = `
+        <div class="text-center mb-3">
+            <h3 style="color: #ffc107;">${starsHtml}</h3>
+            <p class="h5 mb-1">${avgRating.toFixed(1)}/5</p>
+            <p class="text-muted small">${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'}</p>
+        </div>
+        <div class="rating-breakdown">
+            ${[5,4,3,2,1].map(rating => `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1 small">
+                        <span>${rating} ★</span>
+                        <span>${percentages[rating]}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: ${percentages[rating]}%"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function updatePagination(pagination) {
+    const paginationDiv = document.getElementById('reviews-pagination');
+    
+    if (pagination.total_pages <= 1) {
+        paginationDiv.style.display = 'none';
+        return;
+    }
+
+    paginationDiv.style.display = 'block';
+    document.getElementById('page-info').textContent = `Page ${pagination.page} of ${pagination.total_pages}`;
+
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+
+    prevBtn.parentElement.classList.toggle('disabled', pagination.page <= 1);
+    nextBtn.parentElement.classList.toggle('disabled', pagination.page >= pagination.total_pages);
+
+    prevBtn.onclick = (e) => {
+        e.preventDefault();
+        if (pagination.page > 1) {
+            currentPage = pagination.page - 1;
+            loadReviews();
+            window.scrollTo({top: document.querySelector('.reviews-summary').offsetTop - 100, behavior: 'smooth'});
+        }
+    };
+
+    nextBtn.onclick = (e) => {
+        e.preventDefault();
+        if (pagination.page < pagination.total_pages) {
+            currentPage = pagination.page + 1;
+            loadReviews();
+            window.scrollTo({top: document.querySelector('.reviews-summary').offsetTop - 100, behavior: 'smooth'});
+        }
+    };
+}
+
+async function markHelpful(reviewId, button) {
+    try {
+        const response = await fetch(`/review/${reviewId}/helpful`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            button.textContent = `👍 Helpful (${data.helpful_count})`;
+            button.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// Copy Link to Clipboard Function
+function copyToClipboard(text) {
+    const feedback = document.getElementById('copy-feedback');
+    
+    // Create a temporary textarea to copy from
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    
+    // Select and copy the text
+    textarea.select();
+    document.execCommand('copy');
+    
+    // Remove the temporary textarea
+    document.body.removeChild(textarea);
+    
+    // Show feedback message
+    feedback.classList.remove('d-none');
+    
+    // Hide feedback after 3 seconds
+    setTimeout(() => {
+        feedback.classList.add('d-none');
+    }, 3000);
+}
+
+// Load reviews on page load
+loadReviews();
+</script>
+
+{% endblock %}

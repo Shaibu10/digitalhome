@@ -1,0 +1,271 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin - User Details: {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_users') }}">Users</a></li>
+                    <li class="breadcrumb-item active">{{ user.username }}</li>
+                </ol>
+            </nav>
+            <h1 class="h2 mb-0">User Details</h1>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Users
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Profile Card -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="avatar-xl bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                        <span class="text-white fw-bold display-6">{{ user.username[0]|upper }}</span>
+                    </div>
+                    <h4 class="mb-1">{{ user.username }}</h4>
+                    <p class="text-muted mb-3">{{ user.email }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+                        {% if user.is_admin %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-shield-alt me-1"></i>Administrator
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary">Regular User</span>
+                        {% endif %}
+                        
+                        {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                        
+                        {% if user.is_verified %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle me-1"></i>Verified
+                        </span>
+                        {% else %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-exclamation-circle me-1"></i>Unverified
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="row text-center mt-4">
+                        <div class="col-6">
+                            <div class="h4 text-primary mb-0">{{ user.get_order_count() }}</div>
+                            <small class="text-muted">Total Orders</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-success mb-0">GH₵ {{ "%.2f"|format(user.get_total_spent()) }}</div>
+                            <small class="text-muted">Total Spent</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if not user.is_verified %}
+                        <form action="{{ url_for('admin_verify_user', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('Manually verify {{ user.username }}?')">
+                                <i class="fas fa-check-circle me-2"></i>Verify User
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if not user.is_admin %}
+                        <a class="btn btn-warning" 
+                           href="{{ url_for('admin_toggle_admin', user_id=user.id) }}"
+                           onclick="return confirm('Make {{ user.username }} an administrator?')">
+                            <i class="fas fa-user-shield me-2"></i>Make Admin
+                        </a>
+                        {% else %}
+                        <a class="btn btn-warning" 
+                           href="{{ url_for('admin_toggle_admin', user_id=user.id) }}"
+                           onclick="return confirm('Remove admin rights from {{ user.username }}?')">
+                            <i class="fas fa-user me-2"></i>Remove Admin
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.is_active %}
+                        <a class="btn btn-danger" 
+                           href="{{ url_for('admin_toggle_active', user_id=user.id) }}"
+                           onclick="return confirm('Deactivate {{ user.username }}?')">
+                            <i class="fas fa-user-slash me-2"></i>Deactivate User
+                        </a>
+                        {% else %}
+                        <a class="btn btn-success" 
+                           href="{{ url_for('admin_toggle_active', user_id=user.id) }}"
+                           onclick="return confirm('Activate {{ user.username }}?')">
+                            <i class="fas fa-user-check me-2"></i>Activate User
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.get_order_count() == 0 and user.id != current_user.id %}
+                        <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST">
+                            <button type="submit" class="btn btn-outline-danger w-100"
+                                    onclick="return confirm('Permanently delete {{ user.username }}? This cannot be undone.')">
+                                <i class="fas fa-trash me-2"></i>Delete User
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Details -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th class="text-muted">User ID:</th>
+                                    <td>{{ user.id }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Username:</th>
+                                    <td>{{ user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Email:</th>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th class="text-muted">Account Created:</th>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Last Login:</th>
+                                    <td>
+                                        {% if user.last_login %}
+                                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                        <span class="text-muted">Never logged in</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Account Status:</th>
+                                    <td>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Email Verified:</th>
+                                    <td>
+                                        {% if user.is_verified %}
+                                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>Yes</span>
+                                        <small class="d-block text-muted">{{ user.verified_at.strftime('%Y-%m-%d %H:%M') if user.verified_at else 'N/A' }}</small>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recent Orders</h5>
+                    <span class="badge bg-primary">{{ user.orders|length }} total</span>
+                </div>
+                <div class="card-body">
+                    {% if user.orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in user.orders|sort(attribute='created_at', reverse=true)|slice(5) %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>GH₵ {{ "%.2f"|format(order.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if order.status == 'delivered' else 'warning' if order.status == 'pending' else 'info' }}">
+                                            {{ order.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if user.orders|length > 5 %}
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Showing 5 of {{ user.orders|length }} orders</small>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">No orders found for this user</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-xl {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+</style>
+{% endblock %}

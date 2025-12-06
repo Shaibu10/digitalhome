@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Send Single SMS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-envelope me-2"></i> Send Single SMS
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="user_id" class="form-label">Select User</label>
+                            <select class="form-select" id="user_id" name="user_id" required onchange="updatePhoneNumber()">
+                                <option value="">-- Select a user --</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" data-phone="{{ user.phone_number }}">
+                                    {{ user.username }} ({{ user.email }}) - {{ user.phone_number }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Users must have a verified phone number</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone_display" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_display" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" 
+                                      placeholder="Enter your SMS message..." maxlength="500" required 
+                                      onkeyup="updateCharCount()"></textarea>
+                            <small class="form-text text-muted">
+                                Characters: <span id="char_count">0</span>/500 
+                                <span id="sms_parts" class="badge bg-info ms-2">1 SMS</span>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <strong><i class="fas fa-info-circle me-2"></i>SMS Length Info:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>160 characters = 1 SMS</li>
+                                    <li>Each additional 153 characters = 1 more SMS</li>
+                                    <li>Longer messages will be combined into one delivery</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Send SMS
+                            </button>
+                            <a href="{{ url_for('sms.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updatePhoneNumber() {
+    const select = document.getElementById('user_id');
+    const option = select.options[select.selectedIndex];
+    const phone = option.getAttribute('data-phone') || '';
+    document.getElementById('phone_display').value = phone;
+}
+
+function updateCharCount() {
+    const message = document.getElementById('message');
+    const length = message.value.length;
+    document.getElementById('char_count').textContent = length;
+    
+    // Calculate SMS parts
+    let parts = 1;
+    if (length > 160) {
+        parts = Math.ceil((length - 160) / 153) + 1;
+    }
+    document.getElementById('sms_parts').textContent = parts + ' SMS';
+}
+</script>
+{% endblock %}
