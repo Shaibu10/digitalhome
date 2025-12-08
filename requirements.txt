@@ -12,6 +12,6 @@ requests==2.31.0
 google-api-python-client==2.100.0
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
-SQLAlchemy==2.0.23
+SQLAlchemy==2.0.36
 alembic==1.13.0
 gunicorn==21.2.0
