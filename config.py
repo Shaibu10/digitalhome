@@ -3,7 +3,18 @@ import os
 class Config:
     # Basic Flask config
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///digitalhome.db')
+    
+    # Database configuration - support both SQLite and PostgreSQL
+    DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///digitalhome.db')
+    
+    # Convert postgresql:// to postgresql+psycopg:// for SQLAlchemy 2.0 with psycopg v3
+    if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+    elif DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+        # Handle legacy postgres:// scheme
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
+    
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Upload configuration - save to static/uploads so Flask can serve them
