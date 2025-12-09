@@ -58,6 +58,18 @@ def create_app():
         try:
             print("=" * 60, file=sys.stderr)
             print("Initializing database tables...", file=sys.stderr)
+            
+            # For PostgreSQL on Render: Drop and recreate tables to ensure schema is up-to-date
+            # This is needed when models change (e.g., column sizes)
+            db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+            if 'postgresql' in db_url and 'onrender' in db_url:
+                print("🔄 PostgreSQL on Render detected - dropping old tables to apply schema updates...", file=sys.stderr)
+                try:
+                    db.drop_all()
+                    print("✅ Old tables dropped successfully", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️  Could not drop tables (may not exist): {e}", file=sys.stderr)
+            
             db.create_all()
             
             # Verify tables were created
@@ -70,6 +82,25 @@ def create_app():
             for table in sorted(tables):
                 print(f"   - {table}", file=sys.stderr)
             print("=" * 60, file=sys.stderr)
+            
+            # Create default admin user if doesn't exist
+            print("Checking for default admin user...", file=sys.stderr)
+            admin_user = User.query.filter_by(email='admin@example.com').first()
+            if not admin_user:
+                print("Creating default admin user...", file=sys.stderr)
+                admin_user = User(
+                    email='admin@example.com',
+                    first_name='Admin',
+                    last_name='User',
+                    is_admin=True,
+                    is_verified=True
+                )
+                admin_user.set_password('admin123')
+                db.session.add(admin_user)
+                db.session.commit()
+                print("✅ Default admin user created: admin@example.com / admin123", file=sys.stderr)
+            else:
+                print("✅ Admin user already exists", file=sys.stderr)
             
         except Exception as e:
             print(f"⚠️  Database initialization error: {e}", file=sys.stderr)
