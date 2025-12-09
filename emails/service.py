@@ -17,7 +17,7 @@ class GmailService:
         self.setup_service()
     
     def setup_service(self):
-        """Setup Gmail API service"""
+        """Setup Gmail API service using OAuth 2.0 user credentials"""
         try:
             # ===== TOGGLE THIS FLAG TO ENABLE/DISABLE GMAIL =====
             # Set to False to disable Gmail and use console logging
@@ -35,42 +35,62 @@ class GmailService:
             # Import here to avoid circular import issues
             from email.mime.text import MIMEText
             from email.mime.multipart import MIMEMultipart
-            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request
+            from google.oauth2.credentials import Credentials
+            from google_auth_oauthlib.flow import InstalledAppFlow
             from googleapiclient.discovery import build
             
-            SERVICE_ACCOUNT_FILE = os.environ.get('GOOGLE_SERVICE_ACCOUNT_FILE', 'credentials.json')
+            CREDENTIALS_FILE = os.environ.get('GOOGLE_CREDENTIALS_FILE', 'credentials.json')
+            TOKEN_FILE = 'token.json'
+            SCOPES = ['https://www.googleapis.com/auth/gmail.send']
             
-            if not os.path.exists(SERVICE_ACCOUNT_FILE):
-                print(f"⚠️ Service account file '{SERVICE_ACCOUNT_FILE}' not found")
+            if not os.path.exists(CREDENTIALS_FILE):
+                print(f"⚠️ OAuth credentials file '{CREDENTIALS_FILE}' not found")
+                print(f"   You need to download credentials.json from Google Cloud Console")
                 self.service = None
                 return
             
             # Validate JSON file
             try:
-                with open(SERVICE_ACCOUNT_FILE, 'r') as f:
+                with open(CREDENTIALS_FILE, 'r') as f:
                     creds_data = json.load(f)
-                    required_fields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'token_uri']
-                    
-                    if not all(field in creds_data for field in required_fields):
-                        print("❌ Service account file missing required fields")
+                    # Check if it's OAuth credentials (has 'installed' or 'web' key)
+                    if 'installed' not in creds_data and 'web' not in creds_data:
+                        print("❌ credentials.json is not an OAuth credentials file")
+                        print("   You downloaded a SERVICE ACCOUNT file instead")
+                        print("   Download OAuth 2.0 credentials from:")
+                        print("   Google Cloud Console → Credentials → Create Credentials → OAuth client ID → Desktop application")
                         self.service = None
                         return
             except json.JSONDecodeError:
-                print("❌ Service account file is not valid JSON")
+                print("❌ credentials.json is not valid JSON")
                 self.service = None
                 return
             
             try:
-                credentials = service_account.Credentials.from_service_account_file(
-                    SERVICE_ACCOUNT_FILE,
-                    scopes=['https://www.googleapis.com/auth/gmail.send']
-                )
+                creds = None
                 
-                # Send directly from service account (no domain delegation)
-                # This avoids "unauthorized_client" errors
-                self.service = build('gmail', 'v1', credentials=credentials)
-                service_account_email = creds_data.get('client_email')
-                print(f"✅ Gmail service initialized successfully (sending as: {service_account_email})")
+                # Load existing token if available
+                if os.path.exists(TOKEN_FILE):
+                    creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+                
+                # If no valid credentials, run OAuth flow
+                if not creds or not creds.valid:
+                    if creds and creds.expired and creds.refresh_token:
+                        creds.refresh(Request())
+                    else:
+                        # First time: Open browser for OAuth consent
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            CREDENTIALS_FILE, SCOPES)
+                        creds = flow.run_local_server(port=0)
+                    
+                    # Save token for future use
+                    with open(TOKEN_FILE, 'w') as token:
+                        token.write(creds.to_json())
+                
+                self.service = build('gmail', 'v1', credentials=creds)
+                sender_email = os.environ.get('GMAIL_ACCOUNT', 'unknown')
+                print(f"✅ Gmail service initialized successfully (sending as: {sender_email})")
                 
             except Exception as e:
                 print(f"❌ Failed to initialize Gmail service: {e}")

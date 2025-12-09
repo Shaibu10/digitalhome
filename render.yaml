@@ -13,34 +13,15 @@ services:
         value: production
       - key: FLASK_DEBUG
         value: "0"
-      # Gmail Configuration
+      # Gmail Configuration (OAuth 2.0)
       - key: ENABLE_GMAIL
         value: "true"
       - key: GMAIL_ACCOUNT
         sync: false
+      - key: SHOW_EMAIL_WARNINGS
+        value: "false"
       # mNotify SMS Configuration
       - key: MNNOTIFY_API_KEY
         sync: false
-      - key: MNNOTIFY_SENDER_ID
-        value: DigitalHome
-      # Email Configuration
-      - key: MAIL_SERVER
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USE_TLS
-        value: "True"
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: ENABLE_GMAIL
-        value: "${ENABLE_GMAIL}"
-      - key: SHOW_EMAIL_WARNINGS
-        value: "false"
-      - key: GOOGLE_SERVICE_ACCOUNT_FILE
-        value: credentials.json
-      - key: MNNOTIFY_API_KEY
-        value: "${MNNOTIFY_API_KEY}"
       - key: MNNOTIFY_SENDER_ID
         value: DigitalHome
