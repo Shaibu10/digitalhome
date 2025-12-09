@@ -8,6 +8,7 @@ blueprints, routes, and utilities for the e-commerce platform.
 
 import os
 import json
+import sys
 from datetime import datetime, timedelta
 from sqlalchemy import and_
 
@@ -50,6 +51,31 @@ def create_app():
     
     # Import and initialize email service
     initialize_email_service()
+    
+    # Initialize database tables on app creation
+    # This ensures tables exist for deployment on Render
+    with app.app_context():
+        try:
+            print("=" * 60, file=sys.stderr)
+            print("Initializing database tables...", file=sys.stderr)
+            db.create_all()
+            
+            # Verify tables were created
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            
+            print(f"✅ Database initialization successful!", file=sys.stderr)
+            print(f"✅ Tables created: {len(tables)}", file=sys.stderr)
+            for table in sorted(tables):
+                print(f"   - {table}", file=sys.stderr)
+            print("=" * 60, file=sys.stderr)
+            
+        except Exception as e:
+            print(f"⚠️  Database initialization error: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            # Continue app startup - tables might already exist
     
     return app
 
