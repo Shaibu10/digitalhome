@@ -5,8 +5,10 @@ services:
     plan: free
     pythonVersion: 3.13
     buildCommand: pip install -r requirements.txt
-    preDeployCommand: python init_db.py
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-class gthread --timeout 60
+    # Database initialization happens automatically in app.py when Flask app starts
+    # The db.create_all() call in create_app() ensures tables exist
+    # This is safer than preDeployCommand which runs in isolated build environment
+    startCommand: gunicorn app:create_app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-class gthread --timeout 60
     envVars:
       - key: FLASK_ENV
         value: production
