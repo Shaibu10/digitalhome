@@ -62,7 +62,10 @@ def create_app():
             # For PostgreSQL on Render: Drop and recreate tables to ensure schema is up-to-date
             # This is needed when models change (e.g., column sizes)
             db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-            if 'postgresql' in db_url and 'onrender' in db_url:
+            is_postgres = 'postgresql' in db_url.lower()
+            is_render = os.environ.get('RENDER') == 'true'  # Render sets this environment variable
+            
+            if is_postgres and is_render:
                 print("🔄 PostgreSQL on Render detected - dropping old tables to apply schema updates...", file=sys.stderr)
                 try:
                     db.drop_all()
