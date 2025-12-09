@@ -155,6 +155,11 @@ def register():
             flash('Username already taken', 'error')
             return redirect(url_for('auth.register'))
         
+        # Check if phone number already registered (if provided)
+        if phone_number and User.query.filter_by(phone_number=phone_number).first():
+            flash('Phone number already registered', 'error')
+            return redirect(url_for('auth.register'))
+        
         # Create new user (not verified yet)
         user = User(username=username, email=email, phone_number=phone_number, is_active=True, is_verified=False)
         user.set_password(password)
