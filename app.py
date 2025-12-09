@@ -92,6 +92,7 @@ def create_app():
             if not admin_user:
                 print("Creating default admin user...", file=sys.stderr)
                 admin_user = User(
+                    username='admin',
                     email='admin@example.com',
                     first_name='Admin',
                     last_name='User',
