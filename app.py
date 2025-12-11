@@ -256,7 +256,8 @@ def allowed_file(filename):
 
 def save_image(file, image_type='product'):
     """
-    Save uploaded image with size-specific resizing and unique filename.
+    Save uploaded image to Cloudinary cloud storage.
+    Falls back to local storage if Cloudinary is not configured.
     
     Args:
         file (FileStorage): Uploaded file
@@ -264,66 +265,123 @@ def save_image(file, image_type='product'):
                          'detail' (800x800), 'cart' (200x200), 'recommended' (300x300)
         
     Returns:
-        str: Saved filename or None if failed
+        str: Cloudinary URL or local filename, or None if failed
     """
+    from cloudinary_helper import upload_to_cloudinary
+    
+    if not file or not allowed_file(file.filename):
+        return None
+    
+    # Try to upload to Cloudinary first
+    try:
+        result = upload_to_cloudinary(file, image_type=image_type)
+        if result:
+            print(f"✅ Image uploaded to Cloudinary: {result['url']}")
+            return result['url']
+    except Exception as e:
+        print(f"⚠️  Cloudinary upload failed: {e}")
+    
+    # Fallback to local storage if Cloudinary fails
+    print("⚠️  Falling back to local storage")
+    
     # Define optimal sizes for different image types
     image_sizes = {
         'product': (600, 600),
-        'category': (400, 200),  # Landscape 2:1 ratio for category cards
+        'category': (400, 200),
         'detail': (800, 800),
         'cart': (200, 200),
         'recommended': (300, 300),
-        'default': (800, 800)  # fallback size
+        'default': (800, 800)
     }
     
-    if file and allowed_file(file.filename):
-        # Create uploads directory if it doesn't exist
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Create uploads directory if it doesn't exist
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # Create unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    original_filename = secure_filename(file.filename)
+    filename = f"{timestamp}_{original_filename}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+    try:
+        file.save(filepath)
+        print(f"Image saved locally to: {filepath}")
         
-        # Create unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        original_filename = secure_filename(file.filename)
-        filename = f"{timestamp}_{original_filename}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
+        # Resize image with size-specific dimensions
         try:
-            file.save(filepath)
-            print(f"Image saved to: {filepath}")
+            img = Image.open(filepath)
+            target_size = image_sizes.get(image_type, image_sizes['default'])
             
-            # Resize image with size-specific dimensions
-            try:
-                img = Image.open(filepath)
-                target_size = image_sizes.get(image_type, image_sizes['default'])
-                
-                # Convert RGBA to RGB for JPEG compatibility
-                if img.mode in ('RGBA', 'LA', 'P'):
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-                    img = background
-                
-                # Resize image while maintaining aspect ratio
-                img.thumbnail(target_size, Image.Resampling.LANCZOS)
-                
-                # Create square canvas and center the image
-                square_img = Image.new('RGB', target_size, (255, 255, 255))
-                offset = ((target_size[0] - img.size[0]) // 2, 
-                         (target_size[1] - img.size[1]) // 2)
-                square_img.paste(img, offset)
-                
-                # Save with quality optimization
-                quality = 85 if filename.lower().endswith('.jpg') or filename.lower().endswith('.jpeg') else 90
-                square_img.save(filepath, quality=quality, optimize=True)
-                
-                print(f"Image resized to {target_size} and saved: {filepath}")
-            except Exception as e:
-                print(f"Image resize failed: {e}")
-                # If resize fails, still return the filename (unoptimized)
+            # Convert RGBA to RGB for JPEG compatibility
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
             
-            return filename
+            # Resize image while maintaining aspect ratio
+            img.thumbnail(target_size, Image.Resampling.LANCZOS)
+            
+            # Create square canvas and center the image
+            square_img = Image.new('RGB', target_size, (255, 255, 255))
+            offset = ((target_size[0] - img.size[0]) // 2, 
+                     (target_size[1] - img.size[1]) // 2)
+            square_img.paste(img, offset)
+            
+            # Save with quality optimization
+            quality = 85 if filename.lower().endswith('.jpg') or filename.lower().endswith('.jpeg') else 90
+            square_img.save(filepath, quality=quality, optimize=True)
+            
+            print(f"Image resized to {target_size} and saved: {filepath}")
         except Exception as e:
-            print(f"Error saving image: {e}")
-            return None
-    return None
+            print(f"Image resize failed: {e}")
+        
+        return filename
+    except Exception as e:
+        print(f"Error saving image locally: {e}")
+        return None
+
+
+def delete_image(image_path):
+    """
+    Delete image from Cloudinary or local storage.
+    Handles both Cloudinary URLs and local filenames.
+    
+    Args:
+        image_path (str): Cloudinary URL or local filename
+        
+    Returns:
+        bool: True if deleted successfully, False otherwise
+    """
+    if not image_path:
+        return False
+    
+    from cloudinary_helper import delete_from_cloudinary
+    
+    # Check if it's a Cloudinary URL
+    if 'cloudinary.com' in image_path or image_path.startswith('https://'):
+        try:
+            # Extract public_id from Cloudinary URL
+            # Format: https://res.cloudinary.com/[cloud]/image/upload/[transformations]/[public_id]
+            parts = image_path.split('/upload/')
+            if len(parts) == 2:
+                public_id = parts[1].rsplit('.', 1)[0] if '.' in parts[1] else parts[1]
+                return delete_from_cloudinary(public_id)
+        except Exception as e:
+            print(f"⚠️  Failed to delete from Cloudinary: {e}")
+            return False
+    else:
+        # Delete from local storage
+        try:
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], image_path)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                print(f"✅ Deleted local image: {filepath}")
+                return True
+        except Exception as e:
+            print(f"⚠️  Failed to delete local image: {e}")
+            return False
+    
+    return False
 
 
 def log_user_activity(user, activity_type, description=None, request_obj=None):
@@ -2364,8 +2422,8 @@ def admin_edit_product(product_id):
                 filename = save_image(image_file, image_type='product')
                 if filename:
                     # Delete old image if exists
-                    if product.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], product.image)):
-                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], product.image))
+                    if product.image:
+                        delete_image(product.image)
                     product.image = filename
         
         db.session.commit()
@@ -2395,8 +2453,8 @@ def admin_delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     
     # Delete associated image file
-    if product.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], product.image)):
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], product.image))
+    if product.image:
+        delete_image(product.image)
     
     db.session.delete(product)
     db.session.commit()
@@ -2498,8 +2556,8 @@ def admin_edit_category(category_id):
                 filename = save_image(image_file, image_type='category')
                 if filename:
                     # Delete old image if exists
-                    if category.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], category.image)):
-                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], category.image))
+                    if category.image:
+                        delete_image(category.image)
                     category.image = filename
         
         db.session.commit()
@@ -2533,8 +2591,8 @@ def admin_delete_category(category_id):
         return redirect(url_for('admin_categories'))
     
     # Delete associated image file
-    if category.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], category.image)):
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], category.image))
+    if category.image:
+        delete_image(category.image)
     
     db.session.delete(category)
     db.session.commit()
@@ -2872,8 +2930,8 @@ def admin_edit_hero_section(hero_id):
                 filename = save_image(image_file, image_type='product')
                 if filename:
                     # Delete old image if exists
-                    if hero_section.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], hero_section.image)):
-                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], hero_section.image))
+                    if hero_section.image:
+                        delete_image(hero_section.image)
                     hero_section.image = filename
         
         db.session.commit()
@@ -2902,8 +2960,8 @@ def admin_delete_hero_section(hero_id):
     hero_section = HeroSection.query.get_or_404(hero_id)
     
     # Delete associated image
-    if hero_section.image and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], hero_section.image)):
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], hero_section.image))
+    if hero_section.image:
+        delete_image(hero_section.image)
     
     db.session.delete(hero_section)
     db.session.commit()
