@@ -22,6 +22,7 @@ from PIL import Image
 from config import Config
 from extensions import db, migrate, login_manager
 from models import User, Product, Category, Order, OrderItem, CartItem, HeroSection, UserActivity, SystemSettings, DynamicMessage, ProductReview, ContactSettings
+from cloudinary_helper import init_cloudinary
 
 # =============================================================================
 # APPLICATION FACTORY
@@ -42,6 +43,9 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    
+    # Initialize Cloudinary for image storage
+    init_cloudinary()
     
     # Register blueprints
     register_blueprints(app)
