@@ -460,7 +460,7 @@
                             {% if product.is_featured %}
                             <span class="badge-featured"><i class="fas fa-star me-1"></i>Featured</span>
                             {% endif %}
-                            <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                            <img src="{{ product.image | image_url }}" 
                                  alt="{{ product.name }}" loading="lazy">
                         </div>
                         

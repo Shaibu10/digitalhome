@@ -106,7 +106,7 @@
                         {% endif %}
                         
                         <div class="category-product-image">
-                            <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                            <img src="{{ product.image | image_url }}" 
                                  alt="{{ product.name }}" loading="lazy">
                         </div>
                         

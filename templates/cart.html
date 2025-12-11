@@ -359,7 +359,7 @@
             {% for item in cart_items %}
             <div class="cart-item">
                 <!-- Product Image -->
-                <img src="{{ url_for('static', filename='uploads/' + item.product.image) if item.product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                <img src="{{ item.product.image | image_url }}" 
                      alt="{{ item.product.name }}" 
                      class="product-image" loading="lazy">
                 

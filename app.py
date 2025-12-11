@@ -161,6 +161,23 @@ def register_template_utilities(app):
             return False
         return dt.date() == date_string
 
+    @app.template_filter('image_url')
+    def image_url_filter(image):
+        """
+        Convert image path to proper URL.
+        If image is a Cloudinary URL, return as-is.
+        If image is a local filename, prepend /static/uploads/
+        """
+        if not image:
+            return url_for('static', filename='images/default-product.jpg')
+        
+        # Check if it's already a Cloudinary URL
+        if 'cloudinary.com' in image or image.startswith('https://'):
+            return image
+        
+        # Otherwise treat as local filename
+        return url_for('static', filename='uploads/' + image)
+
 
 
 def initialize_extensions(app):

@@ -470,7 +470,7 @@
             
             <div class="col-lg-6">
                 {% if hero_section.image %}
-                <img src="{{ url_for('static', filename='uploads/' + hero_section.image) }}" 
+                <img src="{{ hero_section.image | image_url }}" 
                      alt="{{ hero_section.title }}" 
                      class="hero-image">
                 {% else %}
@@ -549,7 +549,7 @@
                 <a href="{{ url_for('category_products', category_id=category.id) }}" class="text-decoration-none">
                     <div class="category-card">
                         <div class="category-img-wrapper">
-                            <img src="{{ url_for('static', filename='uploads/' + category.image) if category.image else url_for('static', filename='images/default-category.jpg') }}" 
+                            <img src="{{ category.image | image_url }}" 
                                  alt="{{ category.name }}" loading="lazy">
                         </div>
                         <div class="category-info">
@@ -587,7 +587,7 @@
                         {% if product.discount_price %}
                         <span class="product-badge badge-sale">-{{ product.discount_percentage() }}%</span>
                         {% endif %}
-                        <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                        <img src="{{ product.image | image_url }}" 
                              alt="{{ product.name }}" loading="lazy">
                     </div>
                     
@@ -643,7 +643,7 @@
                 <div class="product-card">
                     <div class="product-img-wrapper">
                         <span class="product-badge badge-new">New</span>
-                        <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                        <img src="{{ product.image | image_url }}" 
                              alt="{{ product.name }}">
                     </div>
                     

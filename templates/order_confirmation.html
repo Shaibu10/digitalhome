@@ -225,7 +225,7 @@
                 <div class="col-lg-3 col-md-6 col-sm-6 col-12 mb-4">
                     <div class="card shadow-sm h-100">
                         <div class="recommended-product-image">
-                            <img src="{{ url_for('static', filename='uploads/' + product.image) if product.image else url_for('static', filename='images/default-product.jpg') }}" 
+                            <img src="{{ product.image | image_url }}" 
                                  alt="{{ product.name }}" loading="lazy">
                         </div>
                         </div>
