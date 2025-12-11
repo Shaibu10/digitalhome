@@ -23,7 +23,7 @@ Render provides a free PostgreSQL database. Your app already supports it!
 3. Fill in:
    - **Name**: `digitalhome-db`
    - **Database**: `digitalhome`
-   - **User**: `digitalhome_user`
+   - **User**: ` `
    - **Region**: Same as your web service
    - **Plan**: Free
 

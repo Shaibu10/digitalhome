@@ -42,6 +42,7 @@ wheels/
 .env.*.local
 *.pem
 credentials.json
+token.json
 
 # Database
 *.db
