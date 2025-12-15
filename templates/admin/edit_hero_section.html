@@ -52,7 +52,7 @@
                     <div class="mb-3">
                         <label class="form-label">Current Image</label>
                         <div>
-                            <img src="{{ url_for('static', filename='uploads/' + hero_section.image) }}" 
+                            <img src="{{ hero_section.image | image_url }}" 
                                  alt="{{ hero_section.title }}" 
                                  style="max-width: 200px; max-height: 150px; object-fit: cover;" 
                                  class="img-thumbnail">
@@ -143,7 +143,7 @@
 <!-- Preview Section -->
 <!-- In your template, update the preview container -->
 <div class="preview-container border rounded p-4" 
-     data-current-image="{% if hero_section.image %}{{ url_for('static', filename='uploads/' + hero_section.image) }}{% endif %}">
+     data-current-image="{% if hero_section.image %}{{ hero_section.image | image_url }}{% endif %}">
     <p class="text-muted">Preview will update as you make changes...</p>
 </div>
 
