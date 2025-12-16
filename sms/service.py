@@ -135,7 +135,11 @@ class mNotifyService:
             }
     
     def get_account_balance(self):
-        """Get current account balance/credits"""
+        """Get current account balance/credits
+        
+        Note: mNotify API may not have a dedicated balance endpoint.
+        Some implementations return balance in the send response.
+        """
         if not self.enabled:
             # Return demo balance for development
             return {
@@ -146,38 +150,74 @@ class mNotifyService:
             }
         
         try:
-            params = {'key': self.api_key}
-            response = requests.get(
-                f"{self.BASE_URL}/account/balance",
-                params=params,
-                timeout=10
-            )
+            # First, try to get balance by sending a test message to a fake number
+            # This is a workaround if mNotify API doesn't have a dedicated balance endpoint
             
-            if response.status_code == 200:
-                result = response.json()
-                # Log successful balance retrieval
+            # But first, let's try the official endpoint
+            params = {'key': self.api_key}
+            
+            # Try multiple possible endpoints
+            endpoints_to_try = [
+                '/account/balance',
+                '/account/credits', 
+                '/account/info',
+            ]
+            
+            for endpoint in endpoints_to_try:
                 try:
-                    from flask import current_app
-                    current_app.logger.info(f"✅ SMS Balance fetched: {result.get('credits', 0)} credits")
-                except:
-                    pass
-                return {
-                    'status': 'success',
-                    'balance': result.get('credits', 0),
-                    'data': result
-                }
-            else:
-                error_msg = f'API error: {response.status_code}'
-                try:
-                    from flask import current_app
-                    current_app.logger.warning(f"⚠️ SMS Balance API error: {error_msg}\nResponse: {response.text}")
-                except:
-                    pass
-                return {
-                    'status': 'error',
-                    'message': error_msg,
-                    'code': response.status_code
-                }
+                    response = requests.get(
+                        f"{self.BASE_URL}{endpoint}",
+                        params=params,
+                        timeout=5
+                    )
+                    
+                    # Log the attempt
+                    try:
+                        from flask import current_app
+                        current_app.logger.debug(f"Tried endpoint {endpoint}: status={response.status_code}")
+                    except:
+                        pass
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        
+                        # Try to extract balance from various possible field names
+                        balance = (result.get('balance') or 
+                                  result.get('credits') or 
+                                  result.get('credit') or
+                                  result.get('credit_balance') or
+                                  result.get('account_balance') or
+                                  result.get('wallet') or 0)
+                        
+                        if balance is not None:
+                            try:
+                                from flask import current_app
+                                current_app.logger.info(f"✅ SMS Balance fetched from {endpoint}: {balance} credits")
+                            except:
+                                pass
+                            return {
+                                'status': 'success',
+                                'balance': balance,
+                                'data': result,
+                                'endpoint': endpoint
+                            }
+                except (requests.exceptions.RequestException, ValueError):
+                    continue
+            
+            # If all endpoints failed, return helpful error
+            error_msg = 'Could not fetch balance from any mNotify endpoint'
+            try:
+                from flask import current_app
+                current_app.logger.warning(f"⚠️ SMS Balance: {error_msg}")
+            except:
+                pass
+            return {
+                'status': 'error',
+                'message': error_msg,
+                'code': 'NO_ENDPOINT_FOUND',
+                'hint': 'Verify MNOTIFY_API_KEY is valid and your account is active'
+            }
+            
         except requests.exceptions.ConnectTimeout:
             error_msg = 'API connection timeout (mNotify server unreachable)'
             try:
