@@ -155,20 +155,64 @@ class mNotifyService:
             
             if response.status_code == 200:
                 result = response.json()
+                # Log successful balance retrieval
+                try:
+                    from flask import current_app
+                    current_app.logger.info(f"✅ SMS Balance fetched: {result.get('credits', 0)} credits")
+                except:
+                    pass
                 return {
                     'status': 'success',
                     'balance': result.get('credits', 0),
                     'data': result
                 }
             else:
+                error_msg = f'API error: {response.status_code}'
+                try:
+                    from flask import current_app
+                    current_app.logger.warning(f"⚠️ SMS Balance API error: {error_msg}\nResponse: {response.text}")
+                except:
+                    pass
                 return {
                     'status': 'error',
-                    'message': f'API error: {response.status_code}'
+                    'message': error_msg,
+                    'code': response.status_code
                 }
-        except Exception as e:
+        except requests.exceptions.ConnectTimeout:
+            error_msg = 'API connection timeout (mNotify server unreachable)'
+            try:
+                from flask import current_app
+                current_app.logger.error(f"❌ SMS Balance API timeout: {error_msg}")
+            except:
+                pass
             return {
                 'status': 'error',
-                'message': str(e)
+                'message': error_msg,
+                'code': 'TIMEOUT'
+            }
+        except requests.exceptions.RequestException as e:
+            error_msg = f'API request failed: {str(e)}'
+            try:
+                from flask import current_app
+                current_app.logger.error(f"❌ SMS Balance API error: {error_msg}")
+            except:
+                pass
+            return {
+                'status': 'error',
+                'message': error_msg,
+                'code': 'REQUEST_ERROR'
+            }
+        except Exception as e:
+            error_msg = str(e)
+            try:
+                from flask import current_app
+                current_app.logger.error(f"❌ SMS Balance unexpected error: {error_msg}")
+            except:
+                pass
+            return {
+                'status': 'error',
+                'message': error_msg,
+                'code': 'UNKNOWN'
             }
     
     @staticmethod

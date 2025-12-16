@@ -60,6 +60,17 @@
     {% if balance_info.status == 'success' %}
     <div class="row mb-4">
         <div class="col-md-3">
+            {% if balance_info.demo_mode %}
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-flask me-2"></i>SMS Balance (DEMO)
+                    </h6>
+                    <h3 class="mb-0">{{ balance_info.balance }}</h3>
+                    <small>Demo Mode - {{ balance_info.message }}</small>
+                </div>
+            </div>
+            {% else %}
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h6 class="card-title">
@@ -69,25 +80,45 @@
                     <small>mNotify Credits</small>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
     {% else %}
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-secondary text-white">
+            <div class="card bg-danger text-white">
                 <div class="card-body">
                     <h6 class="card-title">
-                        <i class="fas fa-coins me-2"></i>SMS Balance
+                        <i class="fas fa-exclamation-circle me-2"></i>SMS Balance
                     </h6>
                     <h3 class="mb-0">--</h3>
-                    <small class="text-warning">
+                    <small>
                         {% if balance_info.message %}
-                            {{ balance_info.message }}
+                            <strong>{{ balance_info.message }}</strong>
+                            {% if balance_info.code %}
+                            <br><code style="font-size: 0.75rem;">Error Code: {{ balance_info.code }}</code>
+                            {% endif %}
                         {% else %}
-                            Unable to fetch
+                            <strong>Unable to fetch balance</strong>
                         {% endif %}
                     </small>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-warning" role="alert">
+                <strong>⚠️ SMS Balance Error:</strong> 
+                {% if balance_info.code == 'TIMEOUT' %}
+                    The mNotify API server is not responding. Please check your internet connection and try again.
+                {% elif balance_info.code == 'REQUEST_ERROR' %}
+                    Failed to connect to the mNotify API. Verify MNOTIFY_API_KEY is configured correctly.
+                {% elif balance_info.message %}
+                    {{ balance_info.message }}
+                {% else %}
+                    Unable to fetch SMS balance. Check logs for details.
+                {% endif %}
             </div>
         </div>
     </div>
