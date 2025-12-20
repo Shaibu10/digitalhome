@@ -22,10 +22,10 @@ def init_cloudinary():
             api_key=api_key,
             api_secret=api_secret
         )
-        print(f"✅ Cloudinary initialized (cloud: {cloud_name})")
+        print(f"OK Cloudinary initialized (cloud: {cloud_name})")
         return True
     else:
-        print("⚠️  Cloudinary not configured - using local file storage (not persistent on Render)")
+        print("WARNING: Cloudinary not configured - using local file storage (not persistent on Render)")
         return False
 
 def upload_to_cloudinary(file, image_type='product', folder='digitalhome'):

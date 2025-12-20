@@ -72,11 +72,11 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted">First Name</label>
-                            <p class="h6">{{ current_user.first_name or 'Not provided' }}</p>
+                            <p class="h6" data-field="first_name">{{ current_user.first_name or 'Not provided' }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted">Last Name</label>
-                            <p class="h6">{{ current_user.last_name or 'Not provided' }}</p>
+                            <p class="h6" data-field="last_name">{{ current_user.last_name or 'Not provided' }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -92,21 +92,21 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted">Address</label>
-                            <p class="h6">{{ current_user.address or 'Not provided' }}</p>
+                            <p class="h6" data-field="address">{{ current_user.address or 'Not provided' }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted">City</label>
-                            <p class="h6">{{ current_user.city or 'Not provided' }}</p>
+                            <p class="h6" data-field="city">{{ current_user.city or 'Not provided' }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted">Postal Code</label>
-                            <p class="h6">{{ current_user.postal_code or 'Not provided' }}</p>
+                            <p class="h6" data-field="postal_code">{{ current_user.postal_code or 'Not provided' }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted">Phone Number</label>
-                            <p class="h6">{{ current_user.phone_number or 'Not provided' }}</p>
+                            <p class="h6" data-field="phone_number">{{ current_user.phone_number or 'Not provided' }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -508,7 +508,25 @@
 
 {% block extra_js %}
 <script>
+    // Ensure DOM is fully loaded before attaching event listeners
+    console.log('[PROFILE SCRIPT] Page script starting...');
+    
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('[PROFILE SCRIPT] DOMContentLoaded fired');
+        setupProfileForm();
+    });
+    
+    // Also try immediately if DOM is already loaded
+    if (document.readyState === 'loading') {
+        console.log('[PROFILE SCRIPT] DOM still loading, waiting for DOMContentLoaded');
+    } else {
+        console.log('[PROFILE SCRIPT] DOM already loaded, setting up now');
+        setupProfileForm();
+    }
+    
+    function setupProfileForm() {
+        console.log('[PROFILE SETUP] Starting profile form setup');
+        
         // Handle change password form submission
         const changePasswordForm = document.getElementById('changePasswordForm');
         if (changePasswordForm) {
@@ -568,7 +586,107 @@
                 });
             });
         }
-    });
+        
+        // Handle edit profile form submission
+        const editProfileForm = document.getElementById('editProfileForm');
+        console.log('[PROFILE SETUP] Looking for editProfileForm...');
+        console.log('[PROFILE SETUP] editProfileForm element found:', editProfileForm ? 'YES' : 'NO');
+        
+        if (editProfileForm) {
+            console.log('[PROFILE SETUP] Attaching submit event listener to editProfileForm');
+            editProfileForm.addEventListener('submit', function(e) {
+                console.log('[PROFILE SUBMIT] Form submit event triggered');
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                
+                // Disable submit button and show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                
+                // Clear previous message
+                const messageDiv = document.getElementById('profileMessage');
+                messageDiv.innerHTML = '';
+                
+                const jsonData = Object.fromEntries(formData);
+                console.log('[PROFILE UPDATE] Submitting data:', jsonData);
+                
+                // Submit to server
+                fetch('{{ url_for("auth.update_profile") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                    cache: 'no-store'  // Prevent caching
+                })
+                .then(response => {
+                    console.log('[PROFILE UPDATE] Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[PROFILE UPDATE] Response data:', data);
+                    
+                    if (data.success) {
+                        console.log('[PROFILE UPDATE] Success! Updated user data:', data.user_data);
+                        showProfileMessage(data.message, 'success');
+                        
+                        // Update the displayed values immediately without reload
+                        if (data.user_data) {
+                            const userDataElements = {
+                                'first_name': document.querySelector('[data-field="first_name"]'),
+                                'last_name': document.querySelector('[data-field="last_name"]'),
+                                'address': document.querySelector('[data-field="address"]'),
+                                'city': document.querySelector('[data-field="city"]'),
+                                'postal_code': document.querySelector('[data-field="postal_code"]'),
+                                'phone_number': document.querySelector('[data-field="phone_number"]')
+                            };
+                            
+                            for (const [field, element] of Object.entries(userDataElements)) {
+                                if (element) {
+                                    const value = data.user_data[field] || 'Not provided';
+                                    element.innerHTML = value;
+                                    console.log(`[PROFILE UPDATE] Updated ${field} display to: ${value}`);
+                                }
+                            }
+                        }
+                        
+                        // Close modal after 1.5 seconds
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                            
+                            // Also reload page as backup to ensure all sections refresh
+                            location.reload(true);  // true = hard refresh, bypass cache
+                        }, 1500);
+                    } else {
+                        console.error('[PROFILE UPDATE] Update failed:', data.message);
+                        showProfileMessage(data.message || 'Failed to update profile.', 'danger');
+                        
+                        // Re-enable button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
+                    }
+                })
+                .catch(error => {
+                    console.error('[PROFILE UPDATE] Fetch error:', error);
+                    showProfileMessage('An error occurred. Please try again.', 'danger');
+                    
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+            });
+        } else {
+            console.error('[PROFILE ERROR] editProfileForm element not found! Profile updates will not work.');
+        }
+        
+        console.log('[PROFILE SETUP] Profile form setup complete');
+    }
     
     function showPasswordMessage(message, type) {
         const messageDiv = document.getElementById('passwordMessage');
@@ -576,45 +694,6 @@
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>`;
-    }
-
-    // Handle edit profile form submission
-    const editProfileForm = document.getElementById('editProfileForm');
-    if (editProfileForm) {
-        editProfileForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            // Clear previous message
-            const messageDiv = document.getElementById('profileMessage');
-            messageDiv.innerHTML = '';
-            
-            // Submit to server
-            fetch('{{ url_for("auth.update_profile") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showProfileMessage(data.message, 'success');
-                    // Reload page after 1.5 seconds to show updated profile
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showProfileMessage(data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showProfileMessage('An error occurred. Please try again.', 'danger');
-            });
-        });
     }
     
     function showProfileMessage(message, type) {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 """Debug mNotify API endpoints to find working balance endpoint"""
 
 import os

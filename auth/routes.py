@@ -339,11 +339,80 @@ def logout():
     flash('You have been logged out successfully.', 'success')
     return redirect(url_for('index'))
 
-@auth_bp.route('/profile')
+@auth_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    """User profile page"""
+    """User profile page - GET to display, POST for updates via form or GET params"""
     from datetime import datetime as dt
+    
+    # Handle profile updates via GET parameters (legacy/backward compatibility)
+    # This happens when user accesses /auth/profile?first_name=X&last_name=Y etc.
+    if request.method == 'GET' and any(param in request.args for param in ['first_name', 'last_name', 'address', 'city', 'postal_code', 'phone_number']):
+        print(f"\n{'='*80}")
+        print(f"[PROFILE UPDATE] User trying to update via GET parameters (legacy method)")
+        print(f"[DEBUG] User: {current_user.username} (ID: {current_user.id})")
+        print(f"[DEBUG] GET Parameters: {dict(request.args)}")
+        print(f"[WARNING] This is insecure! User should use the Edit Profile form instead.")
+        print(f"{'='*80}")
+        
+        try:
+            # Extract parameters
+            first_name = request.args.get('first_name', '').strip()
+            last_name = request.args.get('last_name', '').strip()
+            address = request.args.get('address', '').strip()
+            city = request.args.get('city', '').strip()
+            postal_code = request.args.get('postal_code', '').strip()
+            phone_number = request.args.get('phone_number', '').strip()
+            
+            # Validate length constraints
+            if len(first_name) > 100 or len(last_name) > 100 or len(address) > 255 or len(city) > 100 or len(postal_code) > 20 or len(phone_number) > 20:
+                print(f"[ERROR] Validation failed - field too long")
+                # Just display the form without updating
+                return render_template('auth/profile.html', user=current_user, now=dt.utcnow())
+            
+            # Update user fields
+            print(f"[DEBUG] Updating user fields from GET parameters...")
+            user_id = current_user.id  # Save ID before expunge
+            current_user.first_name = first_name if first_name else None
+            current_user.last_name = last_name if last_name else None
+            current_user.address = address if address else None
+            current_user.city = city if city else None
+            current_user.postal_code = postal_code if postal_code else None
+            current_user.phone_number = phone_number if phone_number else None
+            
+            print(f"[DEBUG] Committing to database...")
+            db.session.commit()
+            
+            # Verify persistence
+            db.session.expunge_all()
+            verified = User.query.get(user_id)
+            print(f"[VERIFY] After commit - first_name: '{verified.first_name}'")
+            print(f"[SUCCESS] Profile updated via GET parameters")
+            
+            # Log this activity using the saved user_id (avoid detached instance error)
+            try:
+                from app import log_user_activity
+                # Create a fresh user instance from the verified query result
+                log_user_activity(verified, 'profile_updated', 'User updated profile via legacy GET method', request)
+            except Exception as e:
+                print(f"[WARNING] Could not log activity: {e}")
+            
+            print(f"{'='*80}\n")
+            
+            # Redirect to clean profile page without GET parameters
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('auth.profile'))
+            
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Profile update failed: {str(e)}")
+            traceback.print_exc()
+            db.session.rollback()
+            print(f"{'='*80}\n")
+            flash('Error updating profile. Please try again.', 'error')
+            return redirect(url_for('auth.profile'))
+    
+    # Normal GET request - just display the profile page
     return render_template('auth/profile.html', user=current_user, now=dt.utcnow())
 
 @auth_bp.route('/change-password', methods=['POST'])
@@ -391,9 +460,16 @@ def change_password():
 @auth_bp.route('/update-profile', methods=['POST'])
 @login_required
 def update_profile():
-    """Update user profile information"""
+    """Update user profile information with comprehensive logging"""
+    import traceback
+    
+    print(f"\n{'='*80}")
+    print(f"[PROFILE UPDATE] Starting update for user {current_user.id} ({current_user.username})")
+    print(f"{'='*80}")
+    
     try:
         data = request.get_json()
+        print(f"[DEBUG] Received JSON data: {data}")
         
         if not data:
             return jsonify({'success': False, 'message': 'No data provided'}), 400
@@ -405,6 +481,11 @@ def update_profile():
         city = data.get('city', '').strip()
         postal_code = data.get('postal_code', '').strip()
         phone_number = data.get('phone_number', '').strip()
+        
+        print(f"[DEBUG] Parsed fields:")
+        print(f"       first_name: '{first_name}' (len={len(first_name)})")
+        print(f"       last_name: '{last_name}' (len={len(last_name)})")
+        print(f"       phone_number: '{phone_number}' (len={len(phone_number)})")
         
         # Validate length constraints
         if len(first_name) > 100:
@@ -421,6 +502,7 @@ def update_profile():
             return jsonify({'success': False, 'message': 'Phone number must be 20 characters or less'}), 400
         
         # Update current user fields
+        print(f"[DEBUG] Updating user object...")
         current_user.first_name = first_name if first_name else None
         current_user.last_name = last_name if last_name else None
         current_user.address = address if address else None
@@ -428,16 +510,53 @@ def update_profile():
         current_user.postal_code = postal_code if postal_code else None
         current_user.phone_number = phone_number if phone_number else None
         
+        print(f"[DEBUG] Committing to database...")
         db.session.commit()
+        print(f"[SUCCESS] Database commit completed")
+        
+        # Verify the changes were persisted
+        print(f"[DEBUG] Verifying persistence...")
+        db.session.expunge_all()  # Clear session to force reload from DB
+        verified_user = User.query.get(current_user.id)
+        
+        print(f"[VERIFY] After reload from DB:")
+        print(f"         first_name: '{verified_user.first_name}'")
+        print(f"         last_name: '{verified_user.last_name}'")
+        print(f"         phone_number: '{verified_user.phone_number}'")
         
         # Log this action
         from app import log_user_activity
         log_user_activity(current_user, 'profile_updated', 'User updated their profile information', request)
         
-        return jsonify({'success': True, 'message': 'Profile updated successfully!'}), 200
+        print(f"[SUCCESS] Profile update completed successfully")
+        print(f"{'='*80}\n")
+        
+        # Return success with updated data for client-side verification
+        return jsonify({
+            'success': True,
+            'message': 'Profile updated successfully!',
+            'user_data': {
+                'first_name': verified_user.first_name,
+                'last_name': verified_user.last_name,
+                'phone_number': verified_user.phone_number,
+                'address': verified_user.address,
+                'city': verified_user.city,
+                'postal_code': verified_user.postal_code
+            }
+        }), 200
+        
     except Exception as e:
+        print(f"\n[ERROR] Profile update failed!")
+        print(f"[ERROR] Exception: {str(e)}")
+        traceback.print_exc()
+        print(f"{'='*80}\n")
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+        
+        return jsonify({
+            'success': False,
+            'message': 'Unable to update profile. Please try again.',
+            'error_detail': str(e)
+        }), 500
 
 # Admin verification management routes
 @auth_bp.route('/admin/verification', methods=['GET'])

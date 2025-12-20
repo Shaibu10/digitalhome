@@ -8,7 +8,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    phone_number = db.Column(db.String(20), unique=True, nullable=True)  # SMS support (e.g., 0241234567)
+    phone_number = db.Column(db.String(20), nullable=True)  # SMS support (e.g., 0241234567)
     password_hash = db.Column(db.String(255))  # Increased from 128 to 255 for scrypt hashes (151+ chars)
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
