@@ -337,6 +337,12 @@
         flex-direction: column;
     }
     
+    @media (max-width: 576px) {
+        .product-body {
+            padding: 0.75rem;
+        }
+    }
+    
     .product-title {
         font-size: 1rem;
         font-weight: 600;
@@ -348,12 +354,26 @@
         overflow: hidden;
     }
     
+    @media (max-width: 576px) {
+        .product-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+    }
+    
     .product-price {
         font-size: 1.3rem;
         font-weight: 700;
         color: var(--primary-color);
         margin-bottom: 1rem;
         flex: 1;
+    }
+    
+    @media (max-width: 576px) {
+        .product-price {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
     }
     
     .price-sale {
@@ -374,6 +394,12 @@
         gap: 0.5rem;
     }
     
+    @media (max-width: 576px) {
+        .product-actions {
+            gap: 0.3rem;
+        }
+    }
+    
     .btn-view {
         background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
         color: white;
@@ -388,6 +414,14 @@
         align-items: center;
         justify-content: center;
         gap: 0.3rem;
+    }
+    
+    @media (max-width: 576px) {
+        .btn-view {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.75rem;
+            gap: 0.2rem;
+        }
     }
     
     .btn-view:hover {
@@ -410,6 +444,14 @@
         align-items: center;
         justify-content: center;
         gap: 0.3rem;
+    }
+    
+    @media (max-width: 576px) {
+        .btn-add-cart {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.75rem;
+            gap: 0.2rem;
+        }
     }
     
     .btn-add-cart:hover {
@@ -545,7 +587,7 @@
         
         <div class="row g-4">
             {% for category in categories %}
-            <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="col-lg-3 col-md-4 col-sm-6 col-6">
                 <a href="{{ url_for('category_products', category_id=category.id) }}" class="text-decoration-none">
                     <div class="category-card">
                         <div class="category-img-wrapper">
