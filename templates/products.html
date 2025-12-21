@@ -424,8 +424,17 @@
             <!-- Header with Sort -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="results-info">
-                    Showing <strong>{{ products|length }}</strong> product{% if products|length != 1 %}s{% endif %}
-                    {% if current_category %}<strong class="ms-2">in {{ current_category.name }}</strong>{% endif %}
+                    {% if request.args.get('search') %}
+                        <strong>Search Results:</strong> 
+                        {% if products|length == 0 %}
+                            <span class="text-danger">No products found for "{{ request.args.get('search') }}"</span>
+                        {% else %}
+                            Found <strong>{{ products|length }}</strong> product{% if products|length != 1 %}s{% endif %} matching "{{ request.args.get('search') }}"
+                        {% endif %}
+                    {% else %}
+                        Showing <strong>{{ products|length }}</strong> product{% if products|length != 1 %}s{% endif %}
+                        {% if current_category %}<strong class="ms-2">in {{ current_category.name }}</strong>{% endif %}
+                    {% endif %}
                 </div>
                 <div class="sort-dropdown">
                     <div class="dropdown">
@@ -532,10 +541,28 @@
             <div class="no-results">
                 <i class="fas fa-search"></i>
                 <h4>No Products Found</h4>
+                {% if request.args.get('search') %}
+                <p class="text-muted mb-3">No products found matching "<strong>{{ request.args.get('search') }}</strong>"</p>
+                <p class="text-muted mb-3">Try:</p>
+                <ul class="text-muted" style="text-align: left; display: inline-block;">
+                    <li>Using different keywords</li>
+                    <li>Checking your spelling</li>
+                    <li>Using more general terms</li>
+                </ul>
+                <div class="mt-3">
+                    <a href="{{ url_for('products') }}" class="btn btn-primary-modern me-2">
+                        <i class="fas fa-redo me-2"></i>Clear Search
+                    </a>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-th me-2"></i>View All Products
+                    </a>
+                </div>
+                {% else %}
                 <p class="text-muted mb-3">We couldn't find any products matching your criteria.</p>
                 <a href="{{ url_for('products') }}" class="btn btn-primary-modern">
                     <i class="fas fa-redo me-2"></i>Clear Filters
                 </a>
+                {% endif %}
             </div>
             {% endif %}
         </div>

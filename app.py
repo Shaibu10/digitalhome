@@ -597,6 +597,43 @@ def product_detail(product_id):
                          dynamic_messages=dynamic_messages)
 
 
+@app.route('/api/search-suggestions')
+def search_suggestions():
+    """
+    API endpoint for search suggestions/autocomplete.
+    Returns product names matching the search query.
+    
+    Query Parameters:
+        q (str): Search query
+        limit (int): Maximum number of suggestions (default: 10)
+    
+    Returns:
+        JSON: List of product names and categories matching the search
+    """
+    query = request.args.get('q', '').strip()
+    limit = request.args.get('limit', 10, type=int)
+    
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    # Search for products matching the query
+    products = Product.query.filter_by(is_active=True).filter(
+        Product.name.ilike(f'%{query}%')
+    ).limit(limit).all()
+    
+    # Format results
+    suggestions = [
+        {
+            'name': product.name,
+            'category': product.category.name if product.category else 'Uncategorized',
+            'url': url_for('product_detail', product_id=product.id)
+        }
+        for product in products
+    ]
+    
+    return jsonify(suggestions)
+
+
 # =============================================================================
 # CART ROUTES
 # =============================================================================
