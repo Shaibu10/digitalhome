@@ -1,7 +1,7 @@
 """Analytics helpers for dashboard statistics and data processing"""
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_
-from app import db
+from extensions import db
 from models import Order, OrderItem, Product, User, Category
 
 def get_sales_trends(days=30):
@@ -247,11 +247,23 @@ def get_monthly_trends(months=12):
     Returns:
         dict: Monthly sales and revenue data
     """
+    from sqlalchemy.dialects import postgresql, sqlite
+    
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=months*30)
     
+    # Database-agnostic month formatting
+    db_type = db.engine.dialect.name
+    
+    if db_type == 'postgresql':
+        # PostgreSQL: use to_char
+        month_expr = func.to_char(Order.created_at, 'YYYY-MM')
+    else:
+        # SQLite and others: use strftime
+        month_expr = func.strftime('%Y-%m', Order.created_at)
+    
     monthly_sales = db.session.query(
-        func.strftime('%Y-%m', Order.created_at).label('month'),
+        month_expr.label('month'),
         func.count(Order.id).label('orders'),
         func.sum(Order.total_amount).label('revenue')
     ).filter(
@@ -262,9 +274,9 @@ def get_monthly_trends(months=12):
             Order.payment_status == 'paid'
         )
     ).group_by(
-        func.strftime('%Y-%m', Order.created_at)
+        month_expr
     ).order_by(
-        func.strftime('%Y-%m', Order.created_at)
+        month_expr
     ).all()
     
     data = {

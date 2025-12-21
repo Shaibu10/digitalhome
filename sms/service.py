@@ -749,12 +749,12 @@ def send_order_status_sms(order, status_message=None):
             message = status_message
         else:
             status_labels = {
-                'pending': 'Your order is pending',
-                'confirmed': 'Your order has been confirmed',
-                'processing': 'Your order is being processed',
-                'shipped': f'Your order has been shipped. Tracking: {order.tracking_number or "Coming soon"}',
-                'delivered': 'Your order has been delivered',
-                'cancelled': 'Your order has been cancelled'
+                'pending': 'Your order is pending. Call 0544765278 for more Info',
+                'confirmed': 'Your order has been confirmed. Call 0544765278 for any enquiry',
+                'processing': 'Your order is being processed. Call 0544765278 for any enquiry',
+                'shipped': f'Your order has been shipped. Tracking: {order.tracking_number or "Coming soon"}. Call 0544765278 for any enquiry',
+                'delivered': 'Your order has been delivered. Call 0544765278 for any enquiry',
+                'cancelled': 'Your order has been cancelled. Call 0544765278 for any enquiry'
             }
             message = status_labels.get(order.status, f'Your order status is: {order.status}')
         
