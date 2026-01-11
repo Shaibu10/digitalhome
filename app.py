@@ -1620,6 +1620,15 @@ def cancel_order(order_id):
             'message': f'Cannot cancel order in {order.status} status'
         }), 400
     
+    # Restore inventory if payment was made (order is paid/confirmed)
+    if order.payment_status == 'paid':
+        inventory_success, inventory_message = order.restore_inventory()
+        if not inventory_success:
+            return jsonify({
+                'success': False,
+                'message': f'Cannot cancel order: {inventory_message}'
+            }), 400
+    
     # Cancel the order
     order.status = 'cancelled'
     db.session.commit()
@@ -2743,7 +2752,8 @@ def admin_order_detail(order_id):
         return redirect(url_for('index'))
     
     order = Order.query.get_or_404(order_id)
-    return render_template('admin/order_detail.html', order=order)
+    is_print = request.args.get('print', 'false').lower() == 'true'
+    return render_template('admin/order_detail.html', order=order, is_print=is_print)
 
 
 # =============================================================================
@@ -3826,6 +3836,26 @@ def update_order_status():
             old_payment = order.payment_status
             order.payment_status = payment_status
             changes.append(f"Payment: {old_payment} → {payment_status}")
+            
+            # Handle inventory deduction when payment status changed to 'paid'
+            if payment_status == 'paid' and old_payment != 'paid':
+                inventory_success, inventory_message = order.deduct_inventory()
+                if inventory_success:
+                    changes.append(f"Inventory deducted: {inventory_message}")
+                else:
+                    # Log error and inform admin
+                    app.logger.error(f'Inventory deduction failed for order {order.id}: {inventory_message}')
+                    changes.append(f"Error: {inventory_message}")
+            
+            # Handle inventory restoration when payment is refunded
+            elif payment_status == 'refunded' and old_payment == 'paid':
+                inventory_success, inventory_message = order.restore_inventory()
+                if inventory_success:
+                    changes.append(f"Inventory restored: {inventory_message}")
+                else:
+                    # Log warning but don't block the refund
+                    app.logger.warning(f'Inventory restoration failed for order {order.id}: {inventory_message}')
+                    changes.append(f"Warning: {inventory_message}")
         
         # Update tracking number
         if tracking_number:
@@ -3978,6 +4008,168 @@ def export_orders():
     
     except Exception as e:
         print(f"Error exporting orders: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/export_orders_pdf')
+@login_required
+def export_orders_pdf():
+    """
+    Export filtered orders to PDF.
+    
+    Returns:
+        Response: PDF file download
+    """
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+        from io import BytesIO
+        from datetime import datetime
+        
+        # Get filter parameters
+        search = request.args.get('search', '').strip()
+        status_filter = request.args.get('status', '').strip()
+        payment_filter = request.args.get('payment', '').strip()
+        
+        # Build query
+        query = Order.query
+        
+        # Apply filters
+        if search:
+            query = query.filter(
+                (Order.id.ilike(f'%{search}%')) |
+                (Order.user.has(User.username.ilike(f'%{search}%'))) |
+                (Order.user.has(User.email.ilike(f'%{search}%')))
+            )
+        
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        if payment_filter:
+            query = query.filter_by(payment_status=payment_filter)
+        
+        orders = query.order_by(Order.created_at.desc()).all()
+        
+        # Create PDF in memory
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        
+        # Container for the 'Flowable' objects
+        elements = []
+        
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor('#333333'),
+            spaceAfter=12,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=10,
+            textColor=colors.HexColor('#666666'),
+            spaceAfter=6,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Add title
+        title = Paragraph(f"Orders Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Add summary
+        summary_text = f"<b>Total Orders:</b> {len(orders)}"
+        if search:
+            summary_text += f" | <b>Search:</b> {search}"
+        if status_filter:
+            summary_text += f" | <b>Status:</b> {status_filter}"
+        if payment_filter:
+            summary_text += f" | <b>Payment:</b> {payment_filter}"
+        
+        summary = Paragraph(summary_text, heading_style)
+        elements.append(summary)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Prepare table data
+        table_data = [
+            ['Order #', 'Customer', 'Amount', 'Status', 'Payment', 'Date', 'Items']
+        ]
+        
+        for order in orders:
+            table_data.append([
+                order.order_number,
+                order.user.username[:15],
+                f"GH₵{order.total_amount:.2f}",
+                order.status.title(),
+                order.payment_status.title(),
+                order.created_at.strftime('%Y-%m-%d'),
+                str(len(order.order_items))
+            ])
+        
+        # Create table
+        table = Table(table_data, colWidths=[1.2*inch, 1.2*inch, 0.9*inch, 0.9*inch, 1*inch, 0.9*inch, 0.5*inch])
+        
+        # Style table
+        table.setStyle(TableStyle([
+            # Header row
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            
+            # Data rows
+            ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('PADDING', (0, 0), (-1, -1), 5),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elements.append(table)
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # Prepare response
+        pdf_buffer.seek(0)
+        response = app.make_response(pdf_buffer.getvalue())
+        response.headers["Content-Disposition"] = f"attachment; filename=orders_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        response.headers["Content-Type"] = "application/pdf"
+        
+        # Log action
+        log_user_activity(
+            current_user,
+            'admin_action',
+            f'Exported {len(orders)} orders to PDF',
+            request
+        )
+        
+        return response
+    
+    except ImportError:
+        return jsonify({
+            'error': 'PDF export requires reportlab. Install with: pip install reportlab'
+        }), 500
+    except Exception as e:
+        print(f"Error exporting orders to PDF: {e}")
         return jsonify({'error': str(e)}), 500
 
 

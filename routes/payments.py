@@ -195,10 +195,19 @@ def verify_payment(reference):
             order.status = 'confirmed'
             order.payment_status = 'paid'
             
+            # Deduct inventory when payment is confirmed
+            inventory_success, inventory_message = order.deduct_inventory()
+            if not inventory_success:
+                logger.error(f'Inventory deduction failed for order {order.order_number}: {inventory_message}')
+                # Optionally: rollback payment if inventory deduction fails
+                # For now, we log it and continue - adjust based on business requirements
+            else:
+                logger.info(f'Inventory deducted for order {order.order_number}')
+            
             # Log successful payment
             payment_log = PaymentLog(
                 action='verified',
-                details=f'Payment verified successfully via API'
+                details=f'Payment verified successfully via API. Inventory deduction: {inventory_message}'
             )
             payment.logs.append(payment_log)
             
@@ -320,10 +329,17 @@ def paystack_webhook():
                 order.status = 'confirmed'
                 order.payment_status = 'paid'
                 
+                # Deduct inventory when payment is confirmed via webhook
+                inventory_success, inventory_message = order.deduct_inventory()
+                if not inventory_success:
+                    logger.error(f'Inventory deduction failed for order {order.order_number}: {inventory_message}')
+                else:
+                    logger.info(f'Inventory deducted for order {order.order_number}')
+                
                 # Log webhook
                 payment_log = PaymentLog(
                     action='webhook_confirmed',
-                    details=f'Payment confirmed via webhook'
+                    details=f'Payment confirmed via webhook. Inventory deduction: {inventory_message}'
                 )
                 payment.logs.append(payment_log)
                 db.session.commit()

@@ -218,6 +218,46 @@ class Order(db.Model):
         }
         return payment_map.get(self.payment_status, 'secondary')
     
+    def deduct_inventory(self):
+        """
+        Deduct inventory when payment is confirmed as paid.
+        Returns (success, message)
+        """
+        try:
+            for order_item in self.order_items:
+                product = Product.query.get(order_item.product_id)
+                if not product:
+                    return False, f"Product not found: {order_item.product_id}"
+                
+                # Check if enough stock
+                if product.stock_quantity < order_item.quantity:
+                    return False, f"Insufficient stock for {product.name}. Available: {product.stock_quantity}, Needed: {order_item.quantity}"
+                
+                # Deduct inventory
+                product.stock_quantity -= order_item.quantity
+            
+            return True, "Inventory deducted successfully"
+        except Exception as e:
+            return False, f"Error deducting inventory: {str(e)}"
+    
+    def restore_inventory(self):
+        """
+        Restore inventory when order is refunded or cancelled.
+        Returns (success, message)
+        """
+        try:
+            for order_item in self.order_items:
+                product = Product.query.get(order_item.product_id)
+                if not product:
+                    return False, f"Product not found: {order_item.product_id}"
+                
+                # Restore inventory
+                product.stock_quantity += order_item.quantity
+            
+            return True, "Inventory restored successfully"
+        except Exception as e:
+            return False, f"Error restoring inventory: {str(e)}"
+    
     def __repr__(self):
         return f'<Order {self.order_number}>'
 

@@ -144,7 +144,389 @@
     .action-buttons .btn {
         flex: 1;
     }
+    
+    /* Print Styles */
+    @media print {
+        /* Hide non-printable elements */
+        .action-buttons,
+        .navbar,
+        .sidebar,
+        .back-button,
+        .modal,
+        .btn-outline-danger,
+        .btn-outline-primary,
+        .btn-outline-info,
+        [onclick],
+        nav,
+        aside,
+        .navbar-nav,
+        .nav-link {
+            display: none !important;
+        }
+        
+        /* Hide scrollbars and overflow */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+        
+        /* Print-friendly page setup */
+        body {
+            background: white;
+            color: #000;
+            font-size: 10pt;
+            line-height: 1.2;
+            font-family: Arial, sans-serif;
+        }
+        
+        .container-fluid {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 !important;
+            padding: 0.3in !important;
+            background: white;
+        }
+        
+        /* Compress order receipt */
+        .order-header {
+            background: white !important;
+            border: 1px solid #000;
+            padding: 0.2in !important;
+            margin-bottom: 0.15in !important;
+            page-break-after: avoid;
+        }
+        
+        .order-header h1 {
+            margin: 0 0 0.3rem 0;
+            font-size: 14pt;
+            color: #000;
+        }
+        
+        .order-meta {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.15in;
+        }
+        
+        .meta-item {
+            background: white !important;
+            border: none;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .meta-label {
+            font-size: 8pt;
+            font-weight: bold;
+            margin-bottom: 0.1rem;
+        }
+        
+        .meta-value {
+            font-size: 9pt;
+            color: #000;
+        }
+        
+        /* Compress section cards */
+        .section-card {
+            background: white !important;
+            border: 1px solid #000;
+            box-shadow: none !important;
+            margin-bottom: 0.15in !important;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            background: #f0f0f0 !important;
+            border-bottom: 1px solid #000 !important;
+            padding: 0.15in !important;
+        }
+        
+        .section-header h5 {
+            margin: 0;
+            font-size: 11pt;
+            color: #000;
+        }
+        
+        .section-body {
+            padding: 0.15in !important;
+        }
+        
+        /* Compress tables */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        
+        .items-table th {
+            background: #f0f0f0 !important;
+            padding: 0.1in !important;
+            text-align: left;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 8pt;
+        }
+        
+        .items-table td {
+            padding: 0.08in !important;
+            border: 1px solid #ccc;
+            font-size: 9pt;
+        }
+        
+        .items-table tr:last-child td {
+            border-bottom: 1px solid #000;
+        }
+        
+        .product-name {
+            font-weight: 600;
+        }
+        
+        /* Compress totals */
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.08in 0 !important;
+            font-size: 9pt;
+            border-bottom: 1px solid #ccc;
+            margin: 0 !important;
+        }
+        
+        .totals-row.total {
+            border-top: 1px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 0.1in 0 !important;
+            font-weight: bold;
+            font-size: 10pt;
+            margin: 0.1in 0 0 0 !important;
+        }
+        
+        /* Compress status boxes */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.1in;
+        }
+        
+        .status-box {
+            border: 1px solid #000 !important;
+            background: white !important;
+            padding: 0.15in !important;
+        }
+        
+        .status-label {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 0.05rem;
+        }
+        
+        .status-value {
+            font-size: 9pt;
+            color: #000;
+        }
+        
+        /* Badge styling for print */
+        .badge {
+            border: 1px solid #000 !important;
+            background: white !important;
+            color: #000 !important;
+            padding: 0.05in 0.1in !important;
+            font-size: 8pt !important;
+        }
+        
+        /* Remove colors from badges */
+        .bg-success, .bg-warning, .bg-danger, .bg-info, .bg-primary,
+        .badge-success, .badge-warning, .badge-danger, .badge-info, .badge-primary {
+            background: white !important;
+            color: #000 !important;
+        }
+        
+        /* Links */
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        /* Hide unnecessary elements */
+        .modal, .btn, .btn-*, .dropdown, .pagination, .form-control {
+            display: none !important;
+        }
+        
+        /* Reduce all margins and padding */
+        * {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .container-fluid * {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .section-card {
+            margin: 0.1in 0 !important;
+        }
+        
+        .section-header {
+            padding: 0.1in !important;
+        }
+        
+        .section-body {
+            padding: 0.1in !important;
+        }
+        
+        /* Page setup */
+        @page {
+            margin: 0.3in !important;
+            size: A4;
+        }
+        
+        /* Ensure everything fits on one page */
+        html {
+            background: white;
+        }
+        
+        body {
+            page-break-after: avoid;
+        }
+        
+        .container-fluid {
+            page-break-inside: avoid;
+        }
+    }
 </style>
+
+<script>
+    // Handle print mode
+    function initPrintMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPrintMode = urlParams.get('print') === 'true';
+        
+        console.log('Print mode detected:', isPrintMode);
+        
+        if (isPrintMode) {
+            // Hide sidebar and navigation
+            document.querySelectorAll('nav, aside, .sidebar, .navbar, .navbar-nav, [role="navigation"]').forEach(el => {
+                el.style.display = 'none !important';
+            });
+            
+            // Hide all buttons and interactive elements
+            document.querySelectorAll('button, .btn, .action-buttons, .btn-*').forEach(el => {
+                el.style.display = 'none !important';
+            });
+            
+            // Hide back button area
+            const backButton = document.querySelector('.mb-3');
+            if (backButton) {
+                backButton.style.display = 'none !important';
+            }
+            
+            // Hide modals and dropdowns
+            document.querySelectorAll('.modal, .dropdown, .pagination, .form-control').forEach(el => {
+                el.style.display = 'none !important';
+            });
+            
+            // Adjust body and html
+            document.body.style.margin = '0 !important';
+            document.body.style.padding = '0 !important';
+            document.body.style.backgroundColor = 'white';
+            document.documentElement.style.margin = '0 !important';
+            document.documentElement.style.padding = '0 !important';
+            
+            // Remove shadows
+            document.querySelectorAll('.section-card').forEach(el => {
+                el.style.boxShadow = 'none !important';
+                el.style.borderRadius = '0 !important';
+            });
+            
+            // Adjust container for printing
+            const container = document.querySelector('.container-fluid');
+            if (container) {
+                container.style.paddingLeft = '0.3in !important';
+                container.style.paddingRight = '0.3in !important';
+                container.style.paddingTop = '0.3in !important';
+                container.style.paddingBottom = '0.3in !important';
+                container.style.marginLeft = '0 !important';
+                container.style.marginRight = '0 !important';
+                container.style.maxWidth = '100% !important';
+                container.style.backgroundColor = 'white';
+            }
+            
+            // Small delay for rendering, then print
+            setTimeout(() => {
+                console.log('Triggering print dialog...');
+                window.print();
+                console.log('Print dialog should have opened');
+            }, 800);
+            
+            // Backup: trigger print after page load
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    console.log('Backup print trigger on page load');
+                    window.print();
+                }, 500);
+            });
+        }
+    }
+    
+    // Execute when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPrintMode);
+    } else {
+        initPrintMode();
+    }
+    
+    // Also execute on page load
+    window.addEventListener('load', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            console.log('Page fully loaded - print mode active');
+        }
+    });
+</script>
+
+<!-- Print mode indicator and manual trigger -->
+<style>
+    .print-trigger-btn {
+        display: none;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+        background: #667eea;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    @media print {
+        .print-trigger-btn {
+            display: none !important;
+        }
+    }
+</style>
+
+<div id="printTrigger" class="print-trigger-btn" onclick="window.print();" style="display: none;">
+    📄 Click to Print
+</div>
+
+<script>
+    // Show fallback button in print mode if print dialog doesn't trigger
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            const btn = document.getElementById('printTrigger');
+            if (btn) {
+                btn.style.display = 'block';
+                console.log('Print trigger button visible - click to print if dialog did not appear');
+            }
+        }
+    }, 2000);
+</script>
 
 <div class="container-fluid py-4">
     <!-- Back Button -->

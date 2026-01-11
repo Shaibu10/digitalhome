@@ -156,6 +156,9 @@
         <button class="btn btn-outline-success" onclick="exportOrders()">
             <i class="fas fa-download me-2"></i>Export CSV
         </button>
+        <button class="btn btn-outline-danger" onclick="exportOrdersPDF()">
+            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        </button>
     </div>
 </div>
 
@@ -406,6 +409,20 @@ function exportOrders() {
     
     const queryString = params.toString();
     window.location.href = `/api/export_orders?${queryString}`;
+}
+
+function exportOrdersPDF() {
+    const status = document.getElementById('statusFilter').value;
+    const payment = document.getElementById('paymentFilter').value;
+    const search = document.getElementById('searchInput').value;
+    
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+    if (payment) params.append('payment', payment);
+    
+    const queryString = params.toString();
+    window.location.href = `/api/export_orders_pdf?${queryString}`;
 }
 
 document.getElementById('searchInput').addEventListener('keyup', function(e) {
