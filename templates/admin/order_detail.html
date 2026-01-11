@@ -145,7 +145,7 @@
         flex: 1;
     }
     
-    /* Print Styles */
+    /* Print Styles - ULTRA COMPRESSED FOR SINGLE PAGE */
     @media print {
         /* Hide non-printable elements */
         .action-buttons,
@@ -160,7 +160,13 @@
         nav,
         aside,
         .navbar-nav,
-        .nav-link {
+        .nav-link,
+        .alert,
+        .mb-4,
+        .mb-3,
+        small,
+        i.fas,
+        i.me-2 {
             display: none !important;
         }
         
@@ -170,44 +176,54 @@
             padding: 0 !important;
             height: auto !important;
             overflow: visible !important;
+            background: white;
         }
         
-        /* Print-friendly page setup */
+        /* Ultra-compressed page setup */
         body {
-            background: white;
-            color: #000;
-            font-size: 10pt;
-            line-height: 1.2;
+            font-size: 8pt;
+            line-height: 1;
             font-family: Arial, sans-serif;
+            color: #000;
+            background: white;
         }
         
         .container-fluid {
             width: 100%;
             max-width: 100%;
             margin: 0 !important;
-            padding: 0.3in !important;
+            padding: 0.1in !important;
             background: white;
         }
         
-        /* Compress order receipt */
+        .row {
+            margin: 0 !important;
+        }
+        
+        .col-lg-8, .col-lg-4, .col-md-6, .col-12 {
+            padding: 0 !important;
+        }
+        
+        /* Header */
         .order-header {
             background: white !important;
             border: 1px solid #000;
-            padding: 0.2in !important;
-            margin-bottom: 0.15in !important;
+            padding: 0.08in !important;
+            margin-bottom: 0.05in !important;
             page-break-after: avoid;
         }
         
         .order-header h1 {
-            margin: 0 0 0.3rem 0;
-            font-size: 14pt;
+            margin: 0;
+            font-size: 11pt;
             color: #000;
         }
         
         .order-meta {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.15in;
+            gap: 0.04in;
+            margin-top: 0.04in;
         }
         
         .meta-item {
@@ -218,172 +234,163 @@
         }
         
         .meta-label {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
-            margin-bottom: 0.1rem;
+            margin: 0;
         }
         
         .meta-value {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
+            margin: 0;
         }
         
-        /* Compress section cards */
+        /* Cards */
         .section-card {
             background: white !important;
-            border: 1px solid #000;
+            border: 1px solid #999;
             box-shadow: none !important;
-            margin-bottom: 0.15in !important;
+            margin-bottom: 0.05in !important;
+            margin-top: 0 !important;
             page-break-inside: avoid;
         }
         
         .section-header {
-            background: #f0f0f0 !important;
-            border-bottom: 1px solid #000 !important;
-            padding: 0.15in !important;
+            background: #f5f5f5 !important;
+            border-bottom: 1px solid #999 !important;
+            padding: 0.05in !important;
+            margin: 0 !important;
         }
         
         .section-header h5 {
             margin: 0;
-            font-size: 11pt;
+            font-size: 8pt;
             color: #000;
+            font-weight: bold;
         }
         
         .section-body {
-            padding: 0.15in !important;
+            padding: 0.05in !important;
+            margin: 0 !important;
         }
         
-        /* Compress tables */
+        /* Tables */
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9pt;
+            font-size: 7.5pt;
+            margin: 0;
         }
         
         .items-table th {
-            background: #f0f0f0 !important;
-            padding: 0.1in !important;
+            background: #f5f5f5 !important;
+            padding: 0.03in !important;
             text-align: left;
-            border: 1px solid #000;
+            border: 1px solid #999;
             font-weight: bold;
-            font-size: 8pt;
+            font-size: 7pt;
+            margin: 0;
         }
         
         .items-table td {
-            padding: 0.08in !important;
-            border: 1px solid #ccc;
-            font-size: 9pt;
+            padding: 0.03in !important;
+            border: 1px solid #ddd;
+            font-size: 7.5pt;
+            margin: 0;
+        }
+        
+        .items-table tr:nth-child(even) td {
+            background: #fafafa;
         }
         
         .items-table tr:last-child td {
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid #999;
         }
         
         .product-name {
             font-weight: 600;
+            margin: 0;
         }
         
-        /* Compress totals */
-        .totals-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.08in 0 !important;
-            font-size: 9pt;
-            border-bottom: 1px solid #ccc;
-            margin: 0 !important;
-        }
-        
-        .totals-row.total {
-            border-top: 1px solid #000;
-            border-bottom: 2px solid #000;
-            padding: 0.1in 0 !important;
-            font-weight: bold;
-            font-size: 10pt;
-            margin: 0.1in 0 0 0 !important;
-        }
-        
-        /* Compress status boxes */
+        /* Status Grid */
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.1in;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.03in;
         }
         
         .status-box {
-            border: 1px solid #000 !important;
+            border: 1px solid #999 !important;
             background: white !important;
-            padding: 0.15in !important;
+            padding: 0.05in !important;
+            margin: 0 !important;
         }
         
         .status-label {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold;
             color: #000;
-            margin-bottom: 0.05rem;
+            margin: 0;
         }
         
         .status-value {
-            font-size: 9pt;
+            font-size: 7pt;
             color: #000;
+            margin: 0;
         }
         
-        /* Badge styling for print */
+        /* Badge styling */
         .badge {
             border: 1px solid #000 !important;
             background: white !important;
             color: #000 !important;
-            padding: 0.05in 0.1in !important;
-            font-size: 8pt !important;
+            padding: 0.02in 0.05in !important;
+            font-size: 7pt !important;
+            margin: 0 !important;
         }
         
-        /* Remove colors from badges */
         .bg-success, .bg-warning, .bg-danger, .bg-info, .bg-primary,
         .badge-success, .badge-warning, .badge-danger, .badge-info, .badge-primary {
             background: white !important;
             color: #000 !important;
         }
         
-        /* Links */
-        a {
-            color: #000;
-            text-decoration: none;
+        /* Totals */
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.04in 0 !important;
+            font-size: 7.5pt;
+            border-bottom: 1px solid #ddd;
+            margin: 0 !important;
         }
         
-        /* Hide unnecessary elements */
+        .totals-row.total {
+            border-top: 1px solid #999;
+            border-bottom: 2px solid #999;
+            padding: 0.05in 0 !important;
+            font-weight: bold;
+            font-size: 8pt;
+            margin: 0.03in 0 0 0 !important;
+        }
+        
+        /* Hide unnecessary */
         .modal, .btn, .btn-*, .dropdown, .pagination, .form-control {
             display: none !important;
         }
         
-        /* Reduce all margins and padding */
+        /* Remove all default margins/padding */
         * {
             margin: 0 !important;
             padding: 0 !important;
         }
         
-        .container-fluid * {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        .section-card {
-            margin: 0.1in 0 !important;
-        }
-        
-        .section-header {
-            padding: 0.1in !important;
-        }
-        
-        .section-body {
-            padding: 0.1in !important;
-        }
-        
         /* Page setup */
         @page {
-            margin: 0.3in !important;
+            margin: 0.15in !important;
             size: A4;
         }
         
-        /* Ensure everything fits on one page */
         html {
             background: white;
         }
@@ -394,6 +401,20 @@
         
         .container-fluid {
             page-break-inside: avoid;
+        }
+        
+        .section-card {
+            page-break-inside: avoid;
+        }
+        
+        .items-table {
+            page-break-inside: avoid;
+        }
+        
+        /* Links */
+        a {
+            color: #000;
+            text-decoration: none;
         }
     }
 </style>
