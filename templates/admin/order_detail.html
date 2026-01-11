@@ -176,13 +176,16 @@
         * {
             margin: 0 !important;
             padding: 0 !important;
-            page-break-inside: avoid;
         }
         
-        /* Disable page breaks everywhere except table rows */
-        *:not(tr):not(tbody):not(thead) {
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
+        /* Prevent page breaks ONLY on small critical elements */
+        .section-card,
+        .order-header,
+        .status-grid,
+        .items-table,
+        .meta-item,
+        .status-box {
+            page-break-inside: avoid;
         }
         
         /* Page and body */
@@ -212,26 +215,22 @@
             padding: 0 !important;
         }
         
-        /* Container - FORCE SINGLE PAGE */
+        /* Container - NO page-break-inside to allow content to flow from page 1 */
         .container-fluid {
             width: 100%;
             max-width: 100%;
             margin: 0 !important;
             padding: 0.05in !important;
             background: white;
-            page-break-inside: avoid;
-            page-break-after: avoid;
             overflow: visible;
         }
         
-        /* Rows - NO BREAKS */
+        /* Rows - allow normal flow */
         .row {
             margin: 0 !important;
             display: block !important;
             width: 100% !important;
-            page-break-inside: avoid;
-            page-break-after: avoid;
-            overflow: hidden;
+            overflow: visible;
         }
         
         /* Columns - SINGLE COLUMN LAYOUT */
