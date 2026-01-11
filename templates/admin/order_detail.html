@@ -162,23 +162,12 @@
         .navbar-nav,
         .nav-link,
         .alert,
-        .mb-4,
-        .mb-3,
-        .mb-2,
-        .mb-1,
-        .mt-1,
-        .mt-2,
-        .mt-3,
-        .mt-4,
         .me-2,
-        .py-3,
-        .py-4,
         small,
         i,
         .icon,
         .print-trigger-btn,
-        .modal-backdrop,
-        .row.mb-4 {
+        .modal-backdrop {
             display: none !important;
             visibility: hidden !important;
         }
@@ -190,8 +179,8 @@
             page-break-inside: avoid;
         }
         
-        /* Disable page breaks everywhere */
-        *:not(tr) {
+        /* Disable page breaks everywhere except table rows */
+        *:not(tr):not(tbody):not(thead) {
             page-break-inside: avoid !important;
             page-break-after: avoid !important;
         }
